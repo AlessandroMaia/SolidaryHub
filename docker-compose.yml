@@ -1,0 +1,44 @@
+name: solidary-hub
+
+services:
+  postgres:
+    image: postgres:18.1-alpine
+    container_name: sh-postgres
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - sh-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  identity.api:
+    image: ${DOCKER_REGISTRY:-sh}/identity.api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/Services/Identity/Identity.API/Dockerfile
+    container_name: sh-identity.api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sh-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  sh-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

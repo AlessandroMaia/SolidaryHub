@@ -1,0 +1,15 @@
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  identity.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__IdentityDb=Host=postgres;Port=5432;Database=identity_db;Username=postgres;Password=postgres
+      - JwtSettings__Secret=your-super-secret-key-min-32-chars-long-for-development-only
+      - JwtSettings__Issuer=FCG.IdentityService
+      - JwtSettings__Audience=FCG.Client
+      - JwtSettings__AccessTokenExpirationMinutes=60
+    ports:
+      - "5001:8080"

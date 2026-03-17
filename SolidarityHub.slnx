@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Mediator/Mediator.csproj" Id="ff45bea8-9e12-4573-b8d6-4ae2e0abe81f" />
+    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" Id="d519d197-4b4b-40cf-bef6-835d8f837d27" />
+    <Project Path="src/SharedKernel/SharedKernel.csproj" Id="357cae86-59a1-4baf-a693-7d5065364f35" />
+  </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Campaign/">
+    <Project Path="src/Services/Campaign/Campaign.API/Campaign.API.csproj" Id="03ea6eb0-4b09-48d4-bcac-2ab5fdd12fc6" />
+    <Project Path="src/Services/Campaign/Campaign.Domain/Campaign.Domain.csproj" Id="15474f67-4df9-45d6-a069-d8d5cf4654eb" />
+    <Project Path="src/Services/Campaign/Campaign.Infrastructure/Campaign.Infrastructure.csproj" Id="2f9a21fb-874e-4927-a4ac-459837a1cbfd" />
+  </Folder>
+  <Folder Name="/src/Services/Identity/">
+    <Project Path="src/Services/Identity/Identity.API/Identity.API.csproj" Id="7a60da18-0d8b-43ef-ba18-88b01353933b" />
+    <Project Path="src/Services/Identity/Identity.Domain/Identity.Domain.csproj" Id="c5c1f4fd-e2cb-4c64-9f89-08838b12840c" />
+    <Project Path="src/Services/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="c193ceb9-f4ba-47c0-ba91-6345687dbbca" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+</Solution>
