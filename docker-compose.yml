@@ -52,6 +52,22 @@ services:
     networks:
       - sh-network
 
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    container_name: sh-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sh-network
+
   identity.api:
     image: ${DOCKER_REGISTRY:-sh}/identity.api:${TAG:-latest}
     build:
@@ -88,9 +104,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__CampaignDb: Host=postgres;Port=5432;Database=${CAMPAIGN_DB_NAME};Username=${CAMPAIGN_DB_USER};Password=${CAMPAIGN_DB_PASSWORD}
+      ConnectionStrings__RabbitMQ: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
     ports:
       - "5002:8080"
     healthcheck:

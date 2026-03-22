@@ -5,17 +5,12 @@ public class RequestManager(CampaignContext context) : IRequestManager
     private readonly CampaignContext _context = context 
         ?? throw new ArgumentNullException(nameof(context));
 
-    public async Task<bool> ExistAsync(Guid id)
-    {
-        var request = await _context.
-            FindAsync<ClientRequest>(id);
+    public Task<bool> ExistAsync(Guid id, CancellationToken cancellationToken = default)
+        => _context.ClientRequests.AnyAsync(x => x.Id == id, cancellationToken);
 
-        return request != null;
-    }
-
-    public async Task CreateRequestForCommandAsync<T>(Guid id)
+    public async Task CreateRequestForCommandAsync<T>(Guid id, CancellationToken cancellationToken = default)
     {
-        var exists = await ExistAsync(id);
+        var exists = await ExistAsync(id, cancellationToken);
 
         var request = exists ?
             throw new CampaignDomainException($"Requisição com o ID {id} já existe") :
@@ -28,6 +23,6 @@ public class RequestManager(CampaignContext context) : IRequestManager
 
         _context.Add(request);
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

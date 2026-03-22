@@ -17,6 +17,6 @@ public sealed class UpdateCampaignCommandHandler(ICampaignRepository repository)
 
         repository.Update(campaign);
 
-        await repository.UnitOfWork.SaveChangesAsync(ct);
+        await repository.UnitOfWork.SaveEntitiesAsync(ct);
     }
 }

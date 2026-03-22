@@ -1,7 +1,7 @@
 namespace Campaign.Domain.Events;
 
 public record DonationIntentCreatedDomainEvent(
-    int DonationIntentId,
     int CampaignId,
     int DonorUserId,
-    decimal Amount) : INotification;
+    decimal Amount,
+    string? CorrelationId) : INotification;

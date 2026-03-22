@@ -20,7 +20,7 @@ public static class ApplicationExtensions
     public static IServiceCollection AddCustomHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("IdentityDb")
-            ?? throw new InvalidOperationException("IdentityDb connection string not found");
+            ?? throw new InvalidOperationException("A connection string 'IdentityDb' não foi encontrada.");
 
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])

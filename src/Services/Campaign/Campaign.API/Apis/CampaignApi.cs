@@ -2,6 +2,7 @@
 using Campaign.API.Application.Commands.Campaigns.CompleteCampaign;
 using Campaign.API.Application.Commands.Campaigns.CreateCampaign;
 using Campaign.API.Application.Commands.Campaigns.UpdateCampaign;
+using Campaign.API.Application.Commands;
 using Campaign.API.Application.Queries.Campaigns.GetActiveCampaigns;
 using Campaign.API.Application.Queries.Campaigns.GetCampaignById;
 using Campaign.API.Application.Queries.Campaigns.GetCampaignPublicPanel;
@@ -88,18 +89,21 @@ public static class CampaignApi
     }
 
     private static async Task<IResult> Create(
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromBody] CreateCampaignResquestViewModel request,
         IIdentityService identityService,
         IMediator mediator,
         CancellationToken ct)
     {
-        var donorIdString = identityService.GetUserIdentity();
+        var userIdString = identityService.GetUserIdentity();
 
-        if (string.IsNullOrEmpty(donorIdString) || !int.TryParse(donorIdString, out var donorId))
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
             return Results.Unauthorized();
 
+        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
+
         var command = new CreateCampaignCommand(
-            donorId,
+            userId,
             request.Title,
             request.Description,
             request.StartDate,
@@ -107,16 +111,21 @@ public static class CampaignApi
             request.FinancialGoalAmount
         );
 
-        var id = await mediator.Send(command, ct);
+        var identifiedCommand = new IdentifiedCommand<CreateCampaignCommand, int>(command, effectiveRequestId);
+        var id = await mediator.Send(identifiedCommand, ct);
+
         return TypedResults.Created($"/api/campaigns/{id}");
     }
 
     private static async Task<IResult> Update(
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromRoute] int id,
         [FromBody] UpdateCampaignRequestViewModel request,
         IMediator mediator,
         CancellationToken ct)
     {
+        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
+
         var command = new UpdateCampaignCommand(
             id,
             request.Title,
@@ -126,11 +135,14 @@ public static class CampaignApi
             request.FinancialGoalAmount
         );
 
-        await mediator.Send(command, ct);
+        var identifiedCommand = new IdentifiedCommand<UpdateCampaignCommand>(command, effectiveRequestId);
+        await mediator.Send(identifiedCommand, ct);
+
         return Results.Ok();
     }
 
     private static async Task<IResult> Complete(
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromRoute] int id,
         [FromBody] CampaignReasonRequestViewModel request,
         IIdentityService identityService,
@@ -142,12 +154,16 @@ public static class CampaignApi
         if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
             return Results.Unauthorized();
 
+        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
         var command = new CompleteCampaignCommand(id, userId, request.Reason);
-        await mediator.Send(command, ct);
+        var identifiedCommand = new IdentifiedCommand<CompleteCampaignCommand>(command, effectiveRequestId);
+
+        await mediator.Send(identifiedCommand, ct);
         return Results.Ok();
     }
 
     private static async Task<IResult> Cancel(
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromRoute] int id,
         [FromBody] CampaignReasonRequestViewModel request,
         IIdentityService identityService,
@@ -159,8 +175,11 @@ public static class CampaignApi
         if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
             return Results.Unauthorized();
 
+        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
         var command = new CancelCampaignCommand(id, userId, request.Reason);
-        await mediator.Send(command, ct);
+        var identifiedCommand = new IdentifiedCommand<CancelCampaignCommand>(command, effectiveRequestId);
+
+        await mediator.Send(identifiedCommand, ct);
         return TypedResults.Ok();
     }
 

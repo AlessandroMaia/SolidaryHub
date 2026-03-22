@@ -1,4 +1,7 @@
-﻿namespace Campaign.API.Extensions;
+﻿using Campaign.API.Application.IntegrationEvents.EventHandling;
+using EventBusRabbitMQ;
+
+namespace Campaign.API.Extensions;
 
 public static class ApplicationExtensions
 {
@@ -16,7 +19,9 @@ public static class ApplicationExtensions
         services.AddScoped(typeof(IPipelineBehavior<>), typeof(ValidationBehavior<>));
         services.AddScoped(typeof(IPipelineBehavior<>), typeof(TransactionBehavior<>));
 
-        services.AddScoped<ICampaignIntegrationEventService, CampaignIntegrationEventService>();
+        services.AddScoped<CampaignIntegrationEventService>();
+        services.AddScoped<ICampaignIntegrationEventService>(sp => sp.GetRequiredService<CampaignIntegrationEventService>());
+        services.AddScoped<ITransactionEventPublisher>(sp => sp.GetRequiredService<CampaignIntegrationEventService>());
 
         return services;
     }
@@ -24,7 +29,7 @@ public static class ApplicationExtensions
     public static IServiceCollection AddCustomHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("CampaignDb")
-            ?? throw new InvalidOperationException("CampaignDb connection string not found");
+            ?? throw new InvalidOperationException("A connection string 'CampaignDb' não foi encontrada.");
 
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
@@ -34,5 +39,13 @@ public static class ApplicationExtensions
                 tags: ["db", "postgres", "ready"]);
 
         return services;
+    }
+
+    public static IHostApplicationBuilder ConfigureEventBus(this IHostApplicationBuilder builder)
+    {
+        builder.AddRabbitMqEventBus(builder.Configuration.GetConnectionString("RabbitMQ")!, "campaign-service")
+            .AddSubscription<DonationIntentReceivedIntegrationEvent, DonationIntentReceivedIntegrationEventHandler>();
+
+        return builder;
     }
 }

@@ -1,4 +1,4 @@
-﻿using Campaign.Domain.AggregatesModel.CampaignAggregate.ValueObjects;
+﻿using Campaign.Infrastructure.Idempotency;
 using System.Data;
 
 namespace Campaign.Infrastructure;
@@ -17,6 +17,7 @@ public class CampaignContext(
     public DbSet<DonationIntent> DonationIntents { get; set; } = null!;
     public DbSet<DonationIntentDeadLetter> DonationIntentDeadLetters { get; set; } = null!;
     public DbSet<DonationIntentProcessingLog> DonationIntentProcessingLogs { get; set; } = null!;
+    public DbSet<ClientRequest> ClientRequests { get; set; } = null!;
 
     private readonly IMediator? _mediator = mediator;
     private IDbContextTransaction? _currentTransaction;

@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/EventBus/EventBus.csproj" Id="7a2b75cf-bb57-43a3-a3d7-93bfcbf9f424" />
+    <Project Path="src/EventBusRabbitMQ/EventBusRabbitMQ.csproj" />
     <Project Path="src/Mediator/Mediator.csproj" Id="ff45bea8-9e12-4573-b8d6-4ae2e0abe81f" />
     <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" Id="d519d197-4b4b-40cf-bef6-835d8f837d27" />
     <Project Path="src/SharedKernel/SharedKernel.csproj" Id="357cae86-59a1-4baf-a693-7d5065364f35" />

@@ -6,8 +6,8 @@ internal sealed class CampaignCreatedDomainEventHandler(ILogger<CampaignCreatedD
     public Task Handle(CampaignCreatedDomainEvent notification, CancellationToken ct)
     {
         logger.LogInformation(
-            "CampaignCreatedDomainEvent tratado para campanha {CampaignId}",
-            notification.CampaignId);
+            "CampaignCreatedDomainEvent tratado para campanha {CampaignTitle}",
+            notification.Title);
 
         return Task.CompletedTask;
     }

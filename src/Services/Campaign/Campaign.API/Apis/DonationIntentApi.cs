@@ -1,4 +1,5 @@
-﻿using Campaign.API.Application.Commands.DonationIntents.CreateDonationIntent;
+﻿using Campaign.API.Application.Commands;
+using Campaign.API.Application.Commands.DonationIntents.CreateDonationIntent;
 using Campaign.API.Application.Commands.DonationIntents.ProcessDonationIntent;
 using Campaign.API.Application.Commands.DonationIntents.RejectDonationIntent;
 using Campaign.API.Application.Queries.DonationIntents.GetDonationIntentById;
@@ -80,6 +81,8 @@ public static class DonationIntentApi
     }
 
     private static async Task<IResult> Create(
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
+        [FromHeader(Name = "x-correlation-id")] string? correlationId,
         [FromRoute] int campaignId,
         [FromBody] CreateDonationIntentRequestViewModel request,
         HttpContext httpContext,
@@ -92,8 +95,8 @@ public static class DonationIntentApi
         if (string.IsNullOrEmpty(donorIdString) || !int.TryParse(donorIdString, out var donorId))
             return Results.Unauthorized();
 
-        var correlationId = httpContext.Request.Headers["X-Correlation-Id"].FirstOrDefault() 
-            ?? Guid.NewGuid().ToString();
+        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
+        var effectiveCorrelationId = correlationId ?? httpContext.TraceIdentifier;
 
         var command = new CreateDonationIntentCommand(
             campaignId,
@@ -101,32 +104,42 @@ public static class DonationIntentApi
             request.Amount,
             request.Currency,
             "api",
-            correlationId,
+            effectiveCorrelationId,
             null);
 
-        var id = await mediator.Send(command, ct);
+        var identifiedCommand = new IdentifiedCommand<CreateDonationIntentCommand, int>(command, effectiveRequestId);
+
+        var id = await mediator.Send(identifiedCommand, ct);
         return TypedResults.Created($"/api/donation-intents/{id}");
     }
 
     private static async Task<IResult> Process(
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromRoute] int id,
         [FromBody] DonationIntentProcessRequestViewModel request,
         IMediator mediator,
         CancellationToken ct)
     {
+        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
         var command = new ProcessDonationIntentCommand(id, request.WorkerName);
-        await mediator.Send(command, ct);
+        var identifiedCommand = new IdentifiedCommand<ProcessDonationIntentCommand>(command, effectiveRequestId);
+
+        await mediator.Send(identifiedCommand, ct);
         return Results.Ok();
     }
 
     private static async Task<IResult> Reject(
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromRoute] int id,
         [FromBody] DonationIntentRejectRequestViewModel request,
         IMediator mediator,
         CancellationToken ct)
     {
+        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
         var command = new RejectDonationIntentCommand(id, request.Reason);
-        await mediator.Send(command, ct);
+        var identifiedCommand = new IdentifiedCommand<RejectDonationIntentCommand>(command, effectiveRequestId);
+
+        await mediator.Send(identifiedCommand, ct);
         return Results.Ok();
     }
 

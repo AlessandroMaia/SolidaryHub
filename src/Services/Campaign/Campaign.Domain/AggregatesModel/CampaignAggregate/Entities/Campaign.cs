@@ -46,7 +46,6 @@ public class Campaign : Entity, IAggregateRoot
         };
 
         campaign.AddDomainEvent(new CampaignCreatedDomainEvent(
-            campaign.Id,
             campaign.Title,
             campaign.StartDate,
             campaign.EndDate,

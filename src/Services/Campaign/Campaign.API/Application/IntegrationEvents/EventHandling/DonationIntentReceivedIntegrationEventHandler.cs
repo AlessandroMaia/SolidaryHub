@@ -8,11 +8,11 @@ internal sealed class DonationIntentReceivedIntegrationEventHandler(
     {
         logger.LogInformation(
             "Evento de integração de intenção de doação recebido. " +
-            "Intenção: {DonationIntentId}, Campanha: {CampaignId}, Doador: {DonorUserId}, Valor: {Amount}",
-            @event.DonationIntentId,
+            "Campanha: {CampaignId}, Doador: {DonorUserId}, Valor: {Amount}, CorrelationId: {CorrelationId}",
             @event.CampaignId,
             @event.DonorUserId,
-            @event.Amount);
+            @event.Amount,
+            @event.CorrelationId);
 
         return Task.CompletedTask;
     }

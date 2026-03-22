@@ -1,14 +1,22 @@
 ﻿namespace Campaign.API.Application.DomainEventHandlers.DonationIntents;
 
-internal sealed class DonationIntentCreatedDomainEventHandler(ILogger<DonationIntentCreatedDomainEventHandler> logger)
-    : INotificationHandler<DonationIntentCreatedDomainEvent>
+internal sealed class DonationIntentCreatedDomainEventHandler(
+    ILogger<DonationIntentCreatedDomainEventHandler> logger,
+    ICampaignIntegrationEventService integrationEventService)
+        : INotificationHandler<DonationIntentCreatedDomainEvent>
 {
-    public Task Handle(DonationIntentCreatedDomainEvent notification, CancellationToken ct)
+    public async Task Handle(DonationIntentCreatedDomainEvent notification, CancellationToken ct)
     {
         logger.LogInformation(
-            "DonationIntentCreatedDomainEvent tratado para intenção {DonationIntentId}",
-            notification.DonationIntentId);
+            "DonationIntentCreatedDomainEvent tratado para campanha {CampaignId}",
+            notification.CampaignId);
 
-        return Task.CompletedTask;
+        await integrationEventService.AddAndSaveEventAsync(
+            new DonationIntentReceivedIntegrationEvent(
+                notification.CampaignId,
+                notification.DonorUserId,
+                notification.Amount,
+                notification.CorrelationId),
+            ct);
     }
 }

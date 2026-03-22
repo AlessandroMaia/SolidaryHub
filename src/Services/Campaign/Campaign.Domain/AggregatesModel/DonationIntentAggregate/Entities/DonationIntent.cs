@@ -64,10 +64,11 @@ public class DonationIntent : Entity, IAggregateRoot
         };
 
         donationIntent.AddDomainEvent(new DonationIntentCreatedDomainEvent(
-            donationIntent.Id,
             donationIntent.CampaignId,
             donationIntent.DonorUserId,
-            donationIntent.Amount));
+            donationIntent.Amount,
+            donationIntent.CorrelationId));
+
 
         return donationIntent;
     }

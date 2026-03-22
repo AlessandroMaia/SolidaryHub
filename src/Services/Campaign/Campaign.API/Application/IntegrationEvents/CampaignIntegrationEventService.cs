@@ -1,29 +1,36 @@
 ﻿namespace Campaign.API.Application.IntegrationEvents;
 
 internal sealed class CampaignIntegrationEventService(
-    ILogger<CampaignIntegrationEventService> logger)
-    : ICampaignIntegrationEventService
+    ILogger<CampaignIntegrationEventService> logger,
+    IEventBus eventBus)
+    : ICampaignIntegrationEventService, ITransactionEventPublisher
 {
-    public Task AddAndSaveEventAsync(
-        IntegrationEvent integrationEvent,
-        CancellationToken ct = default)
+    private readonly List<IntegrationEvent> _pendingEvents = [];
+
+    public Task AddAndSaveEventAsync(IntegrationEvent integrationEvent, CancellationToken ct = default)
     {
+        _pendingEvents.Add(integrationEvent);
+
         logger.LogInformation(
-            "Integration event adicionado ao fluxo de publicação: {IntegrationEventType} ({IntegrationEventId})",
+            "Evento de integração adicionado ao fluxo de publicação: {IntegrationEventType} ({IntegrationEventId})",
             integrationEvent.GetType().Name,
             integrationEvent.Id);
 
         return Task.CompletedTask;
     }
 
-    public Task PublishThroughEventBusAsync(
-        Guid transactionId,
-        CancellationToken ct = default)
+    public async Task PublishThroughEventBusAsync(Guid transactionId, CancellationToken ct = default)
     {
         logger.LogInformation(
-            "Publicando integration events vinculados à transação {TransactionId}",
+            "Publicando eventos de integração vinculados à transação {TransactionId}",
             transactionId);
 
-        return Task.CompletedTask;
+        foreach (var integrationEvent in _pendingEvents)
+            await eventBus.PublishAsync(integrationEvent);
+
+        _pendingEvents.Clear();
     }
+
+    public Task PublishAsync(Guid transactionId, CancellationToken cancellationToken = default)
+        => PublishThroughEventBusAsync(transactionId, cancellationToken);
 }
