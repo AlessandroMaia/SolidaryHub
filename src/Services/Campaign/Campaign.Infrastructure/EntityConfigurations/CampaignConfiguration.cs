@@ -69,9 +69,6 @@ public class CampaignConfiguration : IEntityTypeConfiguration<CampaignEntity>
 
         builder.OwnsOne(c => c.Total, total =>
         {
-            total.Ignore(t => t.Id);
-            total.Ignore(t => t.DomainEvents);
-
             total.Property(t => t.TotalAmountRaised)
                 .HasColumnName("total_amount_raised")
                 .HasPrecision(18, 2)

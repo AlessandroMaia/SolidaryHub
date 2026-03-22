@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using Campaign.Domain.AggregatesModel.CampaignAggregate.ValueObjects;
+using System.Data;
 
 namespace Campaign.Infrastructure;
 
@@ -12,7 +13,6 @@ public class CampaignContext(
 {
     public DbSet<CampaignEntity> Campaigns { get; set; } = null!;
     public DbSet<CampaignStatusHistory> CampaignStatusHistories { get; set; } = null!;
-    public DbSet<CampaignTotal> CampaignTotals { get; set; } = null!;
     public DbSet<DonationLedgerEntry> DonationLedgerEntries { get; set; } = null!;
     public DbSet<DonationIntent> DonationIntents { get; set; } = null!;
     public DbSet<DonationIntentDeadLetter> DonationIntentDeadLetters { get; set; } = null!;
