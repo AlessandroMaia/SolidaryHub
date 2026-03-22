@@ -28,7 +28,7 @@ public static class AdminSeedExtensions
             return;
         }
 
-        var managerRole = await userRepository.GetRoleByNameAsync(Role.Roles.Manager);
+        var managerRole = await userRepository.GetRoleByNameAsync(Roles.Manager);
 
         if (managerRole is null)
         {

@@ -17,65 +17,70 @@ public static class DonationIntentApi
         var group = app.MapGroup("/api/donation-intents")
             .WithTags("Intenção de doação");
 
-        group.MapPost("/{campaignId:int}", Create)
+        var donorGroup = group.MapGroup(string.Empty)
+            .RequireDonorAccess();
+
+        var appUserGroup = group.MapGroup(string.Empty)
+            .RequireApplicationUserAccess();
+
+        var managerGroup = group.MapGroup(string.Empty)
+            .RequireManagerAccess();
+
+        donorGroup.MapPost("/{campaignId:int}", Create)
             .WithName("CadastrarIntencaoDeDoacao")
             .WithSummary("Cadastra uma nova intenção de doação")
             .WithDescription("Cria uma nova intenção de doação para a campanha informada.")
             .Produces(StatusCodes.Status201Created)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization();
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
-        group.MapPut("/{id:int}/process", Process)
+        appUserGroup.MapGet("/{id:int}", GetById)
+            .WithName("ObterIntencaoDeDoacaoPorId")
+            .WithSummary("Obtém uma intenção de doação por identificador")
+            .WithDescription("Retorna os detalhes de uma intenção de doação específica.")
+            .Produces<DonationIntentDetailsViewModel>(StatusCodes.Status200OK)
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
+
+        appUserGroup.MapGet("/donors/{donorId:int}", GetByDonorId)
+            .WithName("ObterIntencoesDeDoacaoPorDoador")
+            .WithSummary("Obtém as intenções de doação de um doador")
+            .WithDescription("Retorna a lista de intenções de doação vinculadas ao doador informado.")
+            .Produces<PagedResponse<DonationIntentListItemViewModel>>(StatusCodes.Status200OK)
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
+
+        managerGroup.MapPut("/{id:int}/process", Process)
             .WithName("ProcessarIntencaoDeDoacao")
             .WithSummary("Processa uma intenção de doação")
             .WithDescription("Processa uma intenção de doação existente.")
             .Produces(StatusCodes.Status200OK)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization();
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
-        group.MapPut("/{id:int}/reject", Reject)
+        managerGroup.MapPut("/{id:int}/reject", Reject)
             .WithName("RejeitarIntencaoDeDoacao")
             .WithSummary("Rejeita uma intenção de doação")
             .WithDescription("Rejeita uma intenção de doação existente informando o motivo.")
             .Produces(StatusCodes.Status200OK)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization();
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
-        group.MapGet("/{id:int}", GetById)
-            .WithName("ObterIntencaoDeDoacaoPorId")
-            .WithSummary("Obtém uma intenção de doação por identificador")
-            .WithDescription("Retorna os detalhes de uma intenção de doação específica.")
-            .Produces<DonationIntentDetailsViewModel>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization();
-
-        group.MapGet("/campaigns/{campaignId:int}", GetByCampaignId)
+        managerGroup.MapGet("/campaigns/{campaignId:int}", GetByCampaignId)
             .WithName("ObterIntencoesDeDoacaoPorCampanha")
             .WithSummary("Obtém as intenções de doação de uma campanha")
             .WithDescription("Retorna a lista de intenções de doação vinculadas à campanha informada.")
             .Produces<PagedResponse<DonationIntentListItemViewModel>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization();
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
-        group.MapGet("/donors/{donorId:int}", GetByDonorId)
-            .WithName("ObterIntencoesDeDoacaoPorDoador")
-            .WithSummary("Obtém as intenções de doação de um doador")
-            .WithDescription("Retorna a lista de intenções de doação vinculadas ao doador informado.")
-            .Produces<PagedResponse<DonationIntentListItemViewModel>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization();
-
-        group.MapGet("/pendings", GetPendings)
+        managerGroup.MapGet("/pendings", GetPendings)
             .WithName("ObterIntencoesDeDoacaoPendentes")
             .WithSummary("Obtém as intenções de doação pendentes")
             .WithDescription("Retorna a lista de intenções de doação com status pendente.")
             .Produces<PagedResponse<DonationIntentListItemViewModel>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization();
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
         return group;
     }
@@ -145,20 +150,34 @@ public static class DonationIntentApi
 
     private static async Task<IResult> GetById(
         [FromRoute] int id,
+        IIdentityService identityService,
         IMediator mediator,
         CancellationToken ct)
     {
         var query = new GetDonationIntentByIdQuery(id);
         var result = await mediator.Receive(query, ct);
 
-        return result is not null
-            ? TypedResults.Ok(result)
-            : TypedResults.NotFound(new ProblemDetails
+        if (result is null)
+        {
+            return TypedResults.NotFound(new ProblemDetails
             {
                 Title = "Intenção de doação não encontrada",
                 Detail = $"Intenção de doação com ID {id} não existe.",
                 Status = StatusCodes.Status404NotFound
             });
+        }
+
+        var userIdString = identityService.GetUserIdentity();
+
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var currentUserId))
+            return TypedResults.Unauthorized();
+
+        var isManager = identityService.IsInRole(Roles.Manager);
+
+        if (!isManager && result.DonorUserId != currentUserId)
+            return TypedResults.Forbid();
+
+        return TypedResults.Ok(result);
     }
 
     private static async Task<IResult> GetByCampaignId(
@@ -175,11 +194,22 @@ public static class DonationIntentApi
 
     private static async Task<IResult> GetByDonorId(
         [FromRoute] int donorId,
+        IIdentityService identityService,
         IMediator mediator,
         CancellationToken ct,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
+        var userIdString = identityService.GetUserIdentity();
+
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var currentUserId))
+            return TypedResults.Unauthorized();
+
+        var isManager = identityService.IsInRole(Roles.Manager);
+
+        if (!isManager && donorId != currentUserId)
+            return TypedResults.Forbid();
+
         var query = new GetDonationIntentsByDonorQuery(donorId, page, pageSize);
         var result = await mediator.Receive(query, ct);
         return TypedResults.Ok(result);

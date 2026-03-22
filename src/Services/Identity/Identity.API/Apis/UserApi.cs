@@ -7,7 +7,8 @@ public static class UserApi
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/users")
-            .WithTags("Usuários");
+            .WithTags("Usuários")
+            .RequireApplicationUserAccess();
 
         group.MapGet("/me", GetCurrentUserAsync)
             .WithName("ObterUsuarioAtual")
@@ -15,8 +16,7 @@ public static class UserApi
             .WithDescription("Retorna as informações de perfil do usuário autenticado")
             .Produces<UserViewModel>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("RequireAuthenticatedUser");
+            .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/{id:int}", GetUserByIdAsync)
             .WithName("ObterUsuarioPorId")
@@ -24,8 +24,7 @@ public static class UserApi
             .WithDescription("Retorna as informações do usuário pelo ID (apenas administrador ou o próprio usuário)")
             .Produces<UserViewModel>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status403Forbidden)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("RequireAuthenticatedUser");
+            .Produces(StatusCodes.Status404NotFound);
 
         return group;
     }
@@ -60,7 +59,7 @@ public static class UserApi
         if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var currentUserId))
             return TypedResults.Forbid();
 
-        var isAdmin = identityService.IsInRole(Role.Roles.Manager);
+        var isAdmin = identityService.IsInRole(Roles.Manager);
         var isOwnProfile = currentUserId == id;
 
         if (!isAdmin && !isOwnProfile)

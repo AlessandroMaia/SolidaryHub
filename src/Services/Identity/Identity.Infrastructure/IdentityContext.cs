@@ -14,7 +14,7 @@ public class IdentityContext(DbContextOptions<IdentityContext> options) : DbCont
     {
         modelBuilder.HasDefaultSchema("identity_db");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityContext).Assembly);
-        modelBuilder.Entity<Role>().HasData(new { Id = 1, Name = Role.Roles.Manager }, new { Id = 2, Name = Role.Roles.Donor });
+        modelBuilder.Entity<Role>().HasData(new { Id = 1, Name = SharedKernel.Roles.Manager }, new { Id = 2, Name = SharedKernel.Roles.Donor });
         base.OnModelCreating(modelBuilder);
     }
 

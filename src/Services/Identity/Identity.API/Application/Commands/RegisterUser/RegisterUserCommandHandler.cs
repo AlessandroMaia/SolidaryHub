@@ -22,7 +22,7 @@ internal sealed class RegisterUserCommandHandler(
 
         var user = User.Create(email, passwordHash, name, cpf);
 
-        var defaultRole = await userRepository.GetRoleByNameAsync(Role.Roles.Donor, ct);
+        var defaultRole = await userRepository.GetRoleByNameAsync(Roles.Donor, ct);
         if (defaultRole is not null)
             user.AssignRole(defaultRole);
 

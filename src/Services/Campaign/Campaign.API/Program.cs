@@ -5,10 +5,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.ConfigureEventBus();
 
-builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddApplication();
-builder.Services.AddCustomHealthChecks(builder.Configuration);
-builder.Services.AddOpenApiDocumentation();
+builder.Services
+    .AddInfrastructure(builder.Configuration)
+    .AddApplication()
+    .AddJwtAuthentication(builder.Configuration)
+    .AddApplicationAuthorizationPolicies()
+    .AddCustomHealthChecks(builder.Configuration)
+    .AddOpenApiDocumentation();
 
 var app = builder.Build();
 

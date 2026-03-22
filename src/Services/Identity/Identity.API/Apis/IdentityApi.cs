@@ -12,6 +12,9 @@ public static class IdentityApi
         var group = app.MapGroup("/api/auth")
             .WithTags("Autenticação");
 
+        var authenticatedGroup = group.MapGroup(string.Empty)
+            .RequireApplicationUserAccess();
+
         group.MapPost("/register", RegisterAsync)
             .WithName("CadastrarUsuario")
             .WithSummary("Cadastra um novo usuário")
@@ -36,22 +39,20 @@ public static class IdentityApi
             .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
             .AllowAnonymous();
 
-        group.MapPut("/change-password", ChangePasswordAsync)
+        authenticatedGroup.MapPut("/change-password", ChangePasswordAsync)
             .WithName("AlterarSenha")
             .WithSummary("Altera a senha do usuário")
             .WithDescription("Altera a senha do usuário autenticado")
             .Produces(StatusCodes.Status204NoContent)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization("RequireAuthenticatedUser");
+            .Produces(StatusCodes.Status401Unauthorized);
 
-        group.MapGet("/validate", ValidateTokenAsync)
+        authenticatedGroup.MapGet("/validate", ValidateTokenAsync)
             .WithName("ValidarToken")
             .WithSummary("Valida o token JWT")
             .WithDescription("Verifica se o token JWT atual é válido e retorna as informações do usuário")
             .Produces<TokenValidationViewModel>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization("RequireAuthenticatedUser");
+            .Produces(StatusCodes.Status401Unauthorized);
 
         return group;
     }
