@@ -2,7 +2,6 @@
 using Identity.API.Application.Commands.RefreshToken;
 using Identity.API.Application.Commands.RegisterUser;
 using Identity.API.Application.Commands.SignIn;
-using Identity.API.Application.Queries.GetUserById;
 
 namespace Identity.API.Apis;
 
@@ -10,7 +9,7 @@ public static class IdentityApi
 {
     public static IEndpointRouteBuilder MapIdentityEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/user")
+        var group = app.MapGroup("/api/auth")
             .WithTags("Autenticação");
 
         group.MapPost("/register", RegisterAsync)
@@ -54,24 +53,6 @@ public static class IdentityApi
             .Produces(StatusCodes.Status401Unauthorized)
             .RequireAuthorization("RequireAuthenticatedUser");
 
-        group.MapGet("/me", GetCurrentUserAsync)
-            .WithName("ObterUsuarioAtual")
-            .WithSummary("Obtém o usuário autenticado atual")
-            .WithDescription("Retorna as informações de perfil do usuário autenticado")
-            .Produces<UserViewModel>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("RequireAuthenticatedUser");
-
-        group.MapGet("/{id:int}", GetUserByIdAsync)
-            .WithName("ObterUsuarioPorId")
-            .WithSummary("Obtém um usuário por ID")
-            .WithDescription("Retorna as informações do usuário pelo ID (apenas administrador ou o próprio usuário)")
-            .Produces<UserViewModel>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status403Forbidden)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("RequireAuthenticatedUser");
-
         return group;
     }
 
@@ -110,7 +91,7 @@ public static class IdentityApi
     {
         var userIdString = identityService.GetUserIdentity();
 
-        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out _))
             return Results.Unauthorized();
 
         await mediator.Send(command, ct);
@@ -132,50 +113,5 @@ public static class IdentityApi
         );
 
         return Results.Ok(response);
-    }
-
-    private static async Task<IResult> GetCurrentUserAsync(
-        IIdentityService identityService,
-        IMediator mediator,
-        CancellationToken ct)
-    {
-        var userIdString = identityService.GetUserIdentity();
-
-        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
-            return TypedResults.Unauthorized();
-
-        var query = new GetUserByIdQuery(userId);
-        var user = await mediator.Receive(query, ct);
-
-        if (user is null)
-            return TypedResults.NotFound();
-
-        return TypedResults.Ok(user);
-    }
-
-    private static async Task<IResult> GetUserByIdAsync(
-        int id,
-        IIdentityService identityService,
-        IMediator mediator,
-        CancellationToken ct)
-    {
-        var userIdString = identityService.GetUserIdentity();
-
-        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var currentUserId))
-            return TypedResults.Forbid();
-
-        var isAdmin = identityService.IsInRole(Role.Roles.Manager);
-        var isOwnProfile = currentUserId == id;
-
-        if (!isAdmin && !isOwnProfile)
-            return TypedResults.Forbid();
-
-        var query = new GetUserByIdQuery(id);
-        var user = await mediator.Receive(query, ct);
-
-        if (user is null)
-            return TypedResults.NotFound();
-
-        return TypedResults.Ok(user);
     }
 }

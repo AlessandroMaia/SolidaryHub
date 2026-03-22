@@ -22,3 +22,4 @@ global using Campaign.Infrastructure.Repositories;
 
 global using Mediator;
 global using Mediator.Notifications;
+global using ServiceDefaults;

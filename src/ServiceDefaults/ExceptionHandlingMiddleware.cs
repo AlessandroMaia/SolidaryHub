@@ -1,4 +1,11 @@
-﻿namespace Identity.API.Middleware;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using SharedKernel;
+
+namespace ServiceDefaults;
 
 public sealed class ExceptionHandlingMiddleware(
     RequestDelegate next,
@@ -34,7 +41,7 @@ public sealed class ExceptionHandlingMiddleware(
                 StatusCodes.Status400BadRequest,
                 CreateValidationProblem(validationEx, context.Request.Path)),
 
-            IdentityDomainException domainEx => (
+            DomainException domainEx => (
                 StatusCodes.Status400BadRequest,
                 CreateDomainProblem(domainEx, context.Request.Path)),
 
@@ -70,7 +77,7 @@ public sealed class ExceptionHandlingMiddleware(
         }
     };
 
-    private static ProblemDetails CreateDomainProblem(IdentityDomainException ex, string? path) => new()
+    private static ProblemDetails CreateDomainProblem(DomainException ex, string? path) => new()
     {
         Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
         Title = "Domain Error",

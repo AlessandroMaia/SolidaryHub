@@ -8,7 +8,7 @@ namespace Campaign.Infrastructure;
 public class CampaignContext(
     DbContextOptions<CampaignContext> options,
     IMediator? mediator = null) 
-        : DbContext(options), IUnitOfWork
+        : DbContext(options), IUnitOfWork, ITransactionalContext
 {
     public DbSet<CampaignEntity> Campaigns { get; set; } = null!;
     public DbSet<CampaignStatusHistory> CampaignStatusHistories { get; set; } = null!;
@@ -41,16 +41,22 @@ public class CampaignContext(
         return true;
     }
 
-    public async Task<IDbContextTransaction?> BeginTransactionAsync()
+    public IExecutionStrategy CreateExecutionStrategy() => Database.CreateExecutionStrategy();
+
+    public async Task<IDbContextTransaction?> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         if (_currentTransaction != null) return null;
 
-        _currentTransaction = await Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        _currentTransaction = await Database.BeginTransactionAsync(
+            IsolationLevel.ReadCommitted,
+            cancellationToken);
 
         return _currentTransaction;
     }
 
-    public async Task CommitTransactionAsync(IDbContextTransaction transaction)
+    public async Task CommitTransactionAsync(
+        IDbContextTransaction transaction,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(transaction);
 
@@ -59,8 +65,8 @@ public class CampaignContext(
 
         try
         {
-            await SaveChangesAsync();
-            await transaction.CommitAsync();
+            await SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch
         {

@@ -20,5 +20,6 @@ app.UseOpenApiDocumentation();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapIdentityEndpoints();
+app.MapUserEndpoints();
 
 app.Run();

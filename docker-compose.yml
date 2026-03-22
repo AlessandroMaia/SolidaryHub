@@ -5,18 +5,52 @@ services:
     image: postgres:18.1-alpine
     container_name: sh-postgres
     environment:
-      POSTGRES_DB: identity_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - sh-network
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      POSTGRES_DB: postgres
+      IDENTITY_DB_NAME: ${IDENTITY_DB_NAME}
+      IDENTITY_DB_USER: ${IDENTITY_DB_USER}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      CAMPAIGN_DB_NAME: ${CAMPAIGN_DB_NAME}
+      CAMPAIGN_DB_USER: ${CAMPAIGN_DB_USER}
+      CAMPAIGN_DB_PASSWORD: ${CAMPAIGN_DB_PASSWORD}
+    command: >
+      postgres
+        -c logging_collector=on
+        -c log_directory=/var/log/postgresql
+        -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log
+        -c log_min_messages=INFO
+        -c log_statement=none
+        -c max_connections=300
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER} -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - common-logs:/var/log/postgresql
+      - ./postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+    networks:
+      - sh-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: sh-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - sh-network
 
   identity.api:
     image: ${DOCKER_REGISTRY:-sh}/identity.api:${TAG:-latest}
@@ -27,18 +61,52 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - sh-network
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__IdentityDb: Host=postgres;Port=5432;Database=${IDENTITY_DB_NAME};Username=${IDENTITY_DB_USER};Password=${IDENTITY_DB_PASSWORD}
+      JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
+      JwtSettings__Issuer: SH.IdentityService
+      JwtSettings__Audience: SH.Client
+      JwtSettings__AccessTokenExpirationMinutes: 60
+    ports:
+      - "5001:8080"
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - sh-network
+
+  campaign.api:
+    image: ${DOCKER_REGISTRY:-sh}/campaign.api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/Services/Campaign/Campaign.API/Dockerfile
+    container_name: sh-campaign.api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__CampaignDb: Host=postgres;Port=5432;Database=${CAMPAIGN_DB_NAME};Username=${CAMPAIGN_DB_USER};Password=${CAMPAIGN_DB_PASSWORD}
+    ports:
+      - "5002:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sh-network
+
+volumes:
+  postgres-data:
+  common-logs:
+  pgadmin-data:
 
 networks:
   sh-network:
     driver: bridge
-
-volumes:
-  postgres-data:

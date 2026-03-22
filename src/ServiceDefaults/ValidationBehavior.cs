@@ -1,4 +1,7 @@
-namespace Identity.API.Application.Behaviors;
+using FluentValidation;
+using Mediator.Behaviors;
+
+namespace ServiceDefaults;
 
 public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
     : IPipelineBehavior<TRequest, TResponse>

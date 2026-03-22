@@ -19,10 +19,8 @@ global using Identity.Domain.AggregatesModel.UsersAggregate.Entities;
 global using Identity.Domain.Exceptions;
 global using Identity.Domain.Services;
 global using Identity.Infrastructure;
-global using Identity.API.Application.Behaviors;
 global using Identity.API.Application.ViewModels;
 global using Identity.API.Extensions;
-global using Identity.API.Middleware;
 
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.AspNetCore.Authentication;

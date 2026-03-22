@@ -3,7 +3,7 @@
 public class DonationLedgerEntry : Entity
 {
     public int CampaignId { get; private set; }
-    public Guid DonationIntentId { get; private set; }
+    public int DonationIntentId { get; private set; }
     public int DonorUserId { get; private set; }
     public decimal Amount { get; private set; }
     public string Source { get; private set; } = null!;
@@ -14,7 +14,7 @@ public class DonationLedgerEntry : Entity
 
     private DonationLedgerEntry(
         int campaignId,
-        Guid donationIntentId,
+        int donationIntentId,
         int donorUserId,
         decimal amount,
         string source,
@@ -31,7 +31,7 @@ public class DonationLedgerEntry : Entity
 
     public static DonationLedgerEntry Create(
         int campaignId,
-        Guid donationIntentId,
+        int donationIntentId,
         int donorUserId,
         decimal amount,
         string source,

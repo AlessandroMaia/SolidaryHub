@@ -1,31 +1,45 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
+ARG BUILD_CONFIGURATION=Release
+
+WORKDIR /src
+
+COPY ["Directory.Packages.props", "."]
+COPY ["Directory.Build.props", "."]
+COPY ["src/SharedKernel/SharedKernel.csproj", "src/SharedKernel/"]
+COPY ["src/Mediator/Mediator.csproj", "src/Mediator/"]
+COPY ["src/ServiceDefaults/ServiceDefaults.csproj", "src/ServiceDefaults/"]
+COPY ["src/EventBus/EventBus.csproj", "src/EventBus/"]
+COPY ["src/Services/Campaign/Campaign.API/Campaign.API.csproj", "src/Services/Campaign/Campaign.API/"]
+COPY ["src/Services/Campaign/Campaign.Domain/Campaign.Domain.csproj", "src/Services/Campaign/Campaign.Domain/"]
+COPY ["src/Services/Campaign/Campaign.Infrastructure/Campaign.Infrastructure.csproj", "src/Services/Campaign/Campaign.Infrastructure/"]
+
+RUN dotnet restore src/Services/Campaign/Campaign.API/Campaign.API.csproj
+
+COPY . .
+
+RUN dotnet publish src/Services/Campaign/Campaign.API/Campaign.API.csproj \
+    -c $BUILD_CONFIGURATION \
+    --no-restore \
+    -o /app/publish \
+    /p:UseAppHost=false
+
+#===============================================================================
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
+
+LABEL org.opencontainers.image.title="Campaign API" \
+      org.opencontainers.image.description="Campanhas e doações - Solidary Hub" \
+      org.opencontainers.image.authors="Alessandro (DEV)" 
+
 WORKDIR /app
 EXPOSE 8080
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
-# This stage is used to build the service project
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["Directory.Packages.props", "."]
-COPY ["Directory.Build.props", "."]
-COPY ["src/Services/Campaign/Campaign.API/Campaign.API.csproj", "src/Services/Campaign/Campaign.API/"]
-RUN dotnet restore "./src/Services/Campaign/Campaign.API/Campaign.API.csproj"
-COPY . .
-WORKDIR "/src/src/Services/Campaign/Campaign.API"
-RUN dotnet build "./Campaign.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+USER $APP_UID
 
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Campaign.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+COPY --from=build /app/publish .
 
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Campaign.API.dll"]

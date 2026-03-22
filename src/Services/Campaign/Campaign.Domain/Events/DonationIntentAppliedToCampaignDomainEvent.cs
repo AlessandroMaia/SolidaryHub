@@ -2,5 +2,5 @@ namespace Campaign.Domain.Events;
 
 public record DonationIntentAppliedToCampaignDomainEvent(
     int CampaignId,
-    Guid DonationIntentId,
+    int DonationIntentId,
     decimal Amount) : INotification;

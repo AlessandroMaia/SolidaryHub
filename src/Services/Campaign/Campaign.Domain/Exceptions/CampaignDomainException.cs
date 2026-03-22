@@ -1,6 +1,6 @@
 ﻿namespace Campaign.Domain.Exceptions;
 
-public class CampaignDomainException : Exception
+public class CampaignDomainException : DomainException
 {
     public CampaignDomainException() { }
 

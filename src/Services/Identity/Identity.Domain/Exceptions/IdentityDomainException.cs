@@ -1,6 +1,6 @@
 ﻿namespace Identity.Domain.Exceptions;
 
-public class IdentityDomainException : Exception
+public class IdentityDomainException : DomainException
 {
     public IdentityDomainException() { }
 

@@ -22,18 +22,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Apis\" />
-    <Folder Include="Application\Behaviors\" />
-    <Folder Include="Application\Commands\" />
-    <Folder Include="Application\DomainEventHandlers\" />
-    <Folder Include="Application\IntegrationEvents\" />
-    <Folder Include="Application\Queries\" />
-    <Folder Include="Application\ViewModels\" />
-    <Folder Include="Extensions\" />
-    <Folder Include="Infrastructure\" />
+    <Folder Include="Application\Commands\Campaigns\CancelCampaign\" />
+    <Folder Include="Application\Commands\Campaigns\CompleteCampaign\" />
+    <Folder Include="Application\Commands\Campaigns\UpdateCampaign\" />
+    <Folder Include="Application\Commands\DonationIntents\CreateDonationIntent\" />
+    <Folder Include="Application\Commands\DonationIntents\RejectDonationIntent\" />
+    <Folder Include="Application\Commands\DonationIntents\ProcessDonationIntent\" />
+    <Folder Include="Application\Queries\Campaigns\GetCampaignById\" />
+    <Folder Include="Application\Queries\Campaigns\GetCampaigns\" />
+    <Folder Include="Application\Queries\Campaigns\GetActiveCampaigns\" />
+    <Folder Include="Application\Queries\Campaigns\GetCampaignPublicPanel\" />
+    <Folder Include="Application\Queries\DonationIntents\GetDonationIntentById\" />
+    <Folder Include="Application\Queries\DonationIntents\GetDonationIntentsByCampaign\" />
+    <Folder Include="Application\Queries\DonationIntents\GetDonationIntentsByDonor\" />
+    <Folder Include="Application\Queries\DonationIntents\GetPendingDonationIntents\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\EventBus\EventBus.csproj" />
     <ProjectReference Include="..\..\..\Mediator\Mediator.csproj" />
     <ProjectReference Include="..\..\..\ServiceDefaults\ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />

@@ -108,7 +108,7 @@ public class Campaign : Entity, IAggregateRoot
         AddDomainEvent(new CampaignCompletedDomainEvent(Id, reason));
     }
 
-    public void ApplyDonation(Guid donationIntentId, int donorUserId, decimal amount, string source, string? correlationId = null)
+    public void ApplyDonation(int donationIntentId, int donorUserId, decimal amount, string source, string? correlationId = null)
     {
         if (Status != CampaignStatus.Active)
             throw new CampaignDomainException("A campanha não está ativa para receber doações.");

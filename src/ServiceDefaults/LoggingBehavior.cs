@@ -1,4 +1,7 @@
-namespace Identity.API.Application.Behaviors;
+using Mediator.Behaviors;
+using Microsoft.Extensions.Logging;
+
+namespace ServiceDefaults;
 
 public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>

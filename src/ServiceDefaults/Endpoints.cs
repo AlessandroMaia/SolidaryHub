@@ -1,4 +1,7 @@
-﻿namespace ServiceDefaults;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+
+namespace ServiceDefaults;
 
 public static class Endpoints
 {
