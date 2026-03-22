@@ -122,9 +122,6 @@ public class Campaign : Entity, IAggregateRoot
 
         _donationLedger.Add(entry);
         Total = Total.ApplyDonation(amount, entry.ProcessedAt);
-
-        AddDomainEvent(new DonationIntentAppliedToCampaignDomainEvent(Id, donationIntentId, amount));
-        AddDomainEvent(new CampaignTotalUpdatedDomainEvent(Id, Total.TotalAmountRaised, Total.TotalDonationsCount));
     }
 
     private void AddStatusHistory(CampaignStatus? oldStatus, CampaignStatus newStatus, string reason, int changedByUserId)

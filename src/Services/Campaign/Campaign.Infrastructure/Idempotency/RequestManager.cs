@@ -1,4 +1,6 @@
-﻿namespace Campaign.Infrastructure.Idempotency;
+﻿using Npgsql;
+
+namespace Campaign.Infrastructure.Idempotency;
 
 public class RequestManager(CampaignContext context) : IRequestManager
 {
@@ -10,19 +12,20 @@ public class RequestManager(CampaignContext context) : IRequestManager
 
     public async Task CreateRequestForCommandAsync<T>(Guid id, CancellationToken cancellationToken = default)
     {
-        var exists = await ExistAsync(id, cancellationToken);
+        _context.Add(new ClientRequest
+        {
+            Id = id,
+            Name = typeof(T).Name,
+            Time = DateTime.UtcNow
+        });
 
-        var request = exists ?
-            throw new CampaignDomainException($"Requisição com o ID {id} já existe") :
-            new ClientRequest()
-            {
-                Id = id,
-                Name = typeof(T).Name,
-                Time = DateTime.UtcNow
-            };
-
-        _context.Add(request);
-
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
+        {
+            throw new CampaignDomainException($"A requisição {id} já foi processada.", ex);
+        }
     }
 }

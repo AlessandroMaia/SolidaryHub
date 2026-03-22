@@ -80,8 +80,6 @@ public class DonationIntent : Entity, IAggregateRoot
 
         Status = DonationIntentStatus.Validated;
         ValidatedAt = DateTime.UtcNow;
-
-        AddDomainEvent(new DonationIntentValidatedDomainEvent(Id, CampaignId, Amount));
     }
 
     public void MarkAsPublished()
@@ -94,7 +92,9 @@ public class DonationIntent : Entity, IAggregateRoot
 
     public void MarkAsProcessing(string workerName)
     {
-        if (Status is not DonationIntentStatus.Published and not DonationIntentStatus.Failed)
+        if (Status is not DonationIntentStatus.Pending
+        and not DonationIntentStatus.Published
+        and not DonationIntentStatus.Failed)
             throw new CampaignDomainException("A intenção de doação não está disponível para processamento.");
 
         Status = DonationIntentStatus.Processing;
@@ -130,8 +130,6 @@ public class DonationIntent : Entity, IAggregateRoot
         Status = DonationIntentStatus.Rejected;
         RejectedAt = DateTime.UtcNow;
         RejectionReason = reason.Trim();
-
-        AddDomainEvent(new DonationIntentRejectedDomainEvent(Id, CampaignId, RejectionReason));
     }
 
     public void MarkAsFailed(string workerName, string errorMessage, bool sendToDeadLetter = false)
