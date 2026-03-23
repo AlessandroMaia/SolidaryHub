@@ -1,0 +1,44 @@
+global using System.Security.Claims;
+
+global using FluentAssertions;
+global using FluentValidation;
+global using NSubstitute;
+global using Xunit;
+
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.OpenApi;
+global using Microsoft.AspNetCore.Routing;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Diagnostics;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Logging.Abstractions;
+global using Microsoft.Extensions.Options;
+global using Microsoft.OpenApi;
+
+global using Identity.API.Application.Commands.ChangePassword;
+global using Identity.API.Application.Commands.RefreshToken;
+global using Identity.API.Application.Commands.RegisterUser;
+global using Identity.API.Application.Commands.SignIn;
+global using Identity.API.Application.Queries.GetAllUsers;
+global using Identity.API.Application.Queries.GetUserById;
+global using Identity.API.Application.ViewModels;
+global using Identity.Domain.AggregatesModel.UsersAggregate.Entities;
+global using Identity.Domain.AggregatesModel.UsersAggregate.Enums;
+global using Identity.Domain.AggregatesModel.UsersAggregate.Repositories;
+global using Identity.Domain.AggregatesModel.UsersAggregate.ValueObjects;
+global using Identity.Domain.Exceptions;
+global using Identity.Domain.Services;
+global using Identity.Infrastructure;
+global using Identity.Infrastructure.Repositories;
+global using Identity.Infrastructure.Services;
+global using Mediator.Behaviors;
+global using Mediator.Commands;
+global using ServiceDefaults;
+global using SharedKernel;

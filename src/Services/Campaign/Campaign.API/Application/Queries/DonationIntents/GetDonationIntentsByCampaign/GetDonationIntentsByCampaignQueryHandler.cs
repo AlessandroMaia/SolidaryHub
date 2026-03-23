@@ -29,6 +29,6 @@ internal sealed class GetDonationIntentsByCampaignQueryHandler(CampaignContext c
                     d.ProcessedAt))
             .ToListAsync(ct);
 
-        return new PagedResponse<DonationIntentListItemViewModel>(donations, totalCount, query.Page, query.PageSize);
+        return new PagedResponse<DonationIntentListItemViewModel>(donations, query.Page, query.PageSize, totalCount);
     }
 }

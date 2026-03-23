@@ -28,6 +28,6 @@ internal sealed class GetCampaignsQueryHandler(CampaignContext context)
                     c.EndDate))
             .ToListAsync(ct);
 
-        return new PagedResponse<CampaignListItemViewModel>(campaigns, totalCount, query.Page, query.PageSize);
+        return new PagedResponse<CampaignListItemViewModel>(campaigns, query.Page, query.PageSize, totalCount);
     }
 }

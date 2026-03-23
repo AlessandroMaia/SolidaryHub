@@ -48,4 +48,8 @@
     <ProjectReference Include="..\Campaign.Infrastructure\Campaign.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Campaign.UnitTests" />
+  </ItemGroup>
+
 </Project>

@@ -25,6 +25,6 @@ internal sealed class GetCampaignPublicPanelQueryHandler(CampaignContext context
                     c.Total.TotalAmountRaised))
             .ToListAsync(ct);
 
-        return new PagedResponse<CampaignPublicPanelViewModel>(campaigns, totalCount, query.Page, query.PageSize);
+        return new PagedResponse<CampaignPublicPanelViewModel>(campaigns, query.Page, query.PageSize, totalCount);
     }
 }
