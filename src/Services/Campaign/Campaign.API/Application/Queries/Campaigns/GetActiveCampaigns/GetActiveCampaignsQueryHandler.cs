@@ -14,7 +14,7 @@ internal sealed class GetActiveCampaignsQueryHandler(CampaignContext context)
         var totalCount = await campaignsQuery.CountAsync(ct);
 
         var campaigns = await campaignsQuery
-            .OrderByDescending(u => u.EndDate)
+            .OrderByDescending(u => u.Period.EndDate)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(c =>
