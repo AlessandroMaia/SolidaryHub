@@ -34,14 +34,28 @@ public sealed class CampaignTotalTests
         var act = () => total.ApplyDonation(0m, DateTime.UtcNow);
 
         act.Should().Throw<CampaignDomainException>()
-            .WithMessage("O valor da doação deve ser maior que zero.");
+            .WithMessage("O valor da doacao deve ser maior que zero.");
     }
-[Fact]
+
+    [Fact]
+    public void ApplyDonation_WithNonUtcProcessedAt_ShouldThrow()
+    {
+        var total = CampaignTotal.Create();
+        var processedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Local);
+
+        var act = () => total.ApplyDonation(10m, processedAt);
+
+        act.Should().Throw<CampaignDomainException>()
+            .WithMessage("A data de processamento da doacao deve estar em UTC.");
+    }
+
+    [Fact]
     public void Equality_WithSameComponents_ShouldBeEqual()
     {
         var processedAt = DateTime.UtcNow;
         var left = CampaignTotal.Create().ApplyDonation(10m, processedAt);
         var right = CampaignTotal.Create().ApplyDonation(10m, processedAt);
+
         typeof(CampaignTotal).GetProperty(nameof(CampaignTotal.UpdatedAt))!
             .SetValue(right, left.UpdatedAt);
 

@@ -102,8 +102,8 @@ public static class CampaignApi
             userId,
             request.Title,
             request.Description,
-            request.StartDate,
-            request.EndDate,
+            request.StartDate.UtcDateTime,
+            request.EndDate.UtcDateTime,
             request.FinancialGoalAmount,
             effectiveRequestId);
 
@@ -125,8 +125,8 @@ public static class CampaignApi
             id,
             request.Title,
             request.Description,
-            request.StartDate,
-            request.EndDate,
+            request.StartDate.UtcDateTime,
+            request.EndDate.UtcDateTime,
             request.FinancialGoalAmount,
             effectiveRequestId);
 

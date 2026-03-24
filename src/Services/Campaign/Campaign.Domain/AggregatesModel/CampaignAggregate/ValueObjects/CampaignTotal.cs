@@ -25,7 +25,10 @@ public class CampaignTotal : ValueObject
     public CampaignTotal ApplyDonation(decimal amount, DateTime processedAt)
     {
         if (amount <= 0)
-            throw new CampaignDomainException("O valor da doação deve ser maior que zero.");
+            throw new CampaignDomainException("O valor da doacao deve ser maior que zero.");
+
+        if (processedAt.Kind != DateTimeKind.Utc)
+            throw new CampaignDomainException("A data de processamento da doacao deve estar em UTC.");
 
         return new CampaignTotal(
             TotalAmountRaised + amount,

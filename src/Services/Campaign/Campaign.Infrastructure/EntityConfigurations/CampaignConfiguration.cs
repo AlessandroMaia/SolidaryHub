@@ -30,10 +30,12 @@ public class CampaignConfiguration : IEntityTypeConfiguration<CampaignEntity>
         {
             period.Property(p => p.StartDate)
                 .HasColumnName("start_date")
+                .HasColumnType("timestamp with time zone")
                 .IsRequired();
 
             period.Property(p => p.EndDate)
                 .HasColumnName("end_date")
+                .HasColumnType("timestamp with time zone")
                 .IsRequired();
         });
 
@@ -62,10 +64,12 @@ public class CampaignConfiguration : IEntityTypeConfiguration<CampaignEntity>
 
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at")
+            .HasColumnType("timestamp with time zone")
             .IsRequired();
 
         builder.Property(c => c.UpdatedAt)
-            .HasColumnName("updated_at");
+            .HasColumnName("updated_at")
+            .HasColumnType("timestamp with time zone");
 
         builder.OwnsOne(c => c.Total, total =>
         {
@@ -79,10 +83,12 @@ public class CampaignConfiguration : IEntityTypeConfiguration<CampaignEntity>
                 .IsRequired();
 
             total.Property(t => t.LastDonationAt)
-                .HasColumnName("last_donation_at");
+                .HasColumnName("last_donation_at")
+                .HasColumnType("timestamp with time zone");
 
             total.Property(t => t.UpdatedAt)
                 .HasColumnName("total_updated_at")
+                .HasColumnType("timestamp with time zone")
                 .IsRequired();
         });
 

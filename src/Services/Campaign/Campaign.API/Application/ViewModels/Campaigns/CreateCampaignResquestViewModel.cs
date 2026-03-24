@@ -3,6 +3,6 @@
 public sealed record CreateCampaignResquestViewModel(
     string Title,
     string Description,
-    DateTime StartDate,
-    DateTime EndDate,
+    DateTimeOffset StartDate,
+    DateTimeOffset EndDate,
     decimal FinancialGoalAmount);
