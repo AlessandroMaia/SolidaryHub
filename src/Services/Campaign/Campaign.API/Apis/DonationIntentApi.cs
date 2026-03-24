@@ -1,4 +1,3 @@
-﻿using Campaign.API.Application.Commands;
 using Campaign.API.Application.Commands.DonationIntents.CreateDonationIntent;
 using Campaign.API.Application.Commands.DonationIntents.ProcessDonationIntent;
 using Campaign.API.Application.Commands.DonationIntents.RejectDonationIntent;
@@ -110,11 +109,10 @@ public static class DonationIntentApi
             request.Currency,
             "api",
             effectiveCorrelationId,
-            null);
+            null,
+            effectiveRequestId);
 
-        var identifiedCommand = new IdentifiedCommand<CreateDonationIntentCommand, int>(command, effectiveRequestId);
-
-        var id = await mediator.Send(identifiedCommand, ct);
+        var id = await mediator.Send(command, ct);
         return TypedResults.Created($"/api/donation-intents/{id}");
     }
 
@@ -126,10 +124,9 @@ public static class DonationIntentApi
         CancellationToken ct)
     {
         var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
-        var command = new ProcessDonationIntentCommand(id, request.WorkerName);
-        var identifiedCommand = new IdentifiedCommand<ProcessDonationIntentCommand>(command, effectiveRequestId);
+        var command = new ProcessDonationIntentCommand(id, request.WorkerName, effectiveRequestId);
 
-        await mediator.Send(identifiedCommand, ct);
+        await mediator.Send(command, ct);
         return Results.Ok();
     }
 
@@ -141,10 +138,9 @@ public static class DonationIntentApi
         CancellationToken ct)
     {
         var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
-        var command = new RejectDonationIntentCommand(id, request.Reason);
-        var identifiedCommand = new IdentifiedCommand<RejectDonationIntentCommand>(command, effectiveRequestId);
+        var command = new RejectDonationIntentCommand(id, request.Reason, effectiveRequestId);
 
-        await mediator.Send(identifiedCommand, ct);
+        await mediator.Send(command, ct);
         return Results.Ok();
     }
 

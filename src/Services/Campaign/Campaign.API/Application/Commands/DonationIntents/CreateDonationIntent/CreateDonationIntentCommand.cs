@@ -7,4 +7,5 @@ public sealed record CreateDonationIntentCommand(
     string Currency,
     string Source,
     string? CorrelationId,
-    string? MessageId) : ICommand<int>;
+    string? MessageId,
+    Guid RequestId = default) : IIdempotentCommand<int>;

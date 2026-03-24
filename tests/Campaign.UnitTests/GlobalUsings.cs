@@ -46,4 +46,5 @@ global using Campaign.Infrastructure.Services;
 global using EventBus.Abstractions;
 global using Mediator;
 global using Mediator.Commands;
+global using ServiceDefaults;
 global using SharedKernel;

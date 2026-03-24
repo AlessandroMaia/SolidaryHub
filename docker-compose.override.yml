@@ -10,19 +10,25 @@ services:
 
   identity.api:
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__IdentityDb=Host=postgres;Port=5432;Database=identity_db;Username=identity_user;Password=Identity@123
-      - JwtSettings__Secret=your-super-secret-key-min-32-chars-long-for-development-only
-      - JwtSettings__Issuer=FCG.IdentityService
-      - JwtSettings__Audience=FCG.Client
-      - JwtSettings__AccessTokenExpirationMinutes=60
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__IdentityDb: Host=postgres;Port=5432;Database=identity_db;Username=identity_user;Password=Identity@123
+      JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
+      JwtSettings__Issuer: SH.IdentityService
+      JwtSettings__Audience: SH.Client
+      JwtSettings__AccessTokenExpirationMinutes: 60
+      JwtSettings__RefreshTokenExpirationDays: 7
     ports:
       - "5001:8080"
 
   campaign.api:
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__CampaignDb=Host=postgres;Port=5432;Database=campaign_db;Username=campaign_user;Password=Campaign@123
-      - ConnectionStrings__RabbitMQ=amqp://solidarity_user:Solidarity123@rabbitmq:5672
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__CampaignDb: Host=postgres;Port=5432;Database=campaign_db;Username=campaign_user;Password=Campaign@123
+      ConnectionStrings__RabbitMQ: amqp://solidarity_user:Solidarity123@rabbitmq:5672
+      JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
+      JwtSettings__Issuer: SH.IdentityService
+      JwtSettings__Audience: SH.Client
+      JwtSettings__AccessTokenExpirationMinutes: 60
+      JwtSettings__RefreshTokenExpirationDays: 7
     ports:
       - "5002:8080"

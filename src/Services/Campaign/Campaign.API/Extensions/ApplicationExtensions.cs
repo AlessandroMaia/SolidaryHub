@@ -1,4 +1,5 @@
-﻿using Campaign.API.Application.IntegrationEvents.EventHandling;
+using Campaign.API.Application.IntegrationEvents;
+using Campaign.API.Application.IntegrationEvents.EventHandling;
 using EventBusRabbitMQ;
 
 namespace Campaign.API.Extensions;
@@ -14,10 +15,12 @@ public static class ApplicationExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(IdempotencyBehavior<,>));
 
         services.AddScoped(typeof(IPipelineBehavior<>), typeof(LoggingBehavior<>));
         services.AddScoped(typeof(IPipelineBehavior<>), typeof(ValidationBehavior<>));
         services.AddScoped(typeof(IPipelineBehavior<>), typeof(TransactionBehavior<>));
+        services.AddScoped(typeof(IPipelineBehavior<>), typeof(IdempotencyBehavior<>));
 
         services.AddScoped<CampaignIntegrationEventService>();
         services.AddScoped<ICampaignIntegrationEventService>(sp => sp.GetRequiredService<CampaignIntegrationEventService>());

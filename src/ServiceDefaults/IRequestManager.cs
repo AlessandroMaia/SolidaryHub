@@ -1,4 +1,4 @@
-﻿namespace Campaign.Infrastructure.Idempotency;
+namespace ServiceDefaults;
 
 public interface IRequestManager
 {

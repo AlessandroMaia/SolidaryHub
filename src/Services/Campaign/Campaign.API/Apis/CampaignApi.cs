@@ -1,8 +1,7 @@
-﻿using Campaign.API.Application.Commands.Campaigns.CancelCampaign;
+using Campaign.API.Application.Commands.Campaigns.CancelCampaign;
 using Campaign.API.Application.Commands.Campaigns.CompleteCampaign;
 using Campaign.API.Application.Commands.Campaigns.CreateCampaign;
 using Campaign.API.Application.Commands.Campaigns.UpdateCampaign;
-using Campaign.API.Application.Commands;
 using Campaign.API.Application.Queries.Campaigns.GetActiveCampaigns;
 using Campaign.API.Application.Queries.Campaigns.GetCampaignById;
 using Campaign.API.Application.Queries.Campaigns.GetCampaignPublicPanel;
@@ -105,11 +104,10 @@ public static class CampaignApi
             request.Description,
             request.StartDate,
             request.EndDate,
-            request.FinancialGoalAmount
-        );
+            request.FinancialGoalAmount,
+            effectiveRequestId);
 
-        var identifiedCommand = new IdentifiedCommand<CreateCampaignCommand, int>(command, effectiveRequestId);
-        var id = await mediator.Send(identifiedCommand, ct);
+        var id = await mediator.Send(command, ct);
 
         return TypedResults.Created($"/api/campaigns/{id}");
     }
@@ -129,11 +127,10 @@ public static class CampaignApi
             request.Description,
             request.StartDate,
             request.EndDate,
-            request.FinancialGoalAmount
-        );
+            request.FinancialGoalAmount,
+            effectiveRequestId);
 
-        var identifiedCommand = new IdentifiedCommand<UpdateCampaignCommand>(command, effectiveRequestId);
-        await mediator.Send(identifiedCommand, ct);
+        await mediator.Send(command, ct);
 
         return Results.Ok();
     }
@@ -152,10 +149,9 @@ public static class CampaignApi
             return Results.Unauthorized();
 
         var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
-        var command = new CompleteCampaignCommand(id, userId, request.Reason);
-        var identifiedCommand = new IdentifiedCommand<CompleteCampaignCommand>(command, effectiveRequestId);
+        var command = new CompleteCampaignCommand(id, userId, request.Reason, effectiveRequestId);
 
-        await mediator.Send(identifiedCommand, ct);
+        await mediator.Send(command, ct);
         return Results.Ok();
     }
 
@@ -173,10 +169,9 @@ public static class CampaignApi
             return Results.Unauthorized();
 
         var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
-        var command = new CancelCampaignCommand(id, userId, request.Reason);
-        var identifiedCommand = new IdentifiedCommand<CancelCampaignCommand>(command, effectiveRequestId);
+        var command = new CancelCampaignCommand(id, userId, request.Reason, effectiveRequestId);
 
-        await mediator.Send(identifiedCommand, ct);
+        await mediator.Send(command, ct);
         return TypedResults.Ok();
     }
 

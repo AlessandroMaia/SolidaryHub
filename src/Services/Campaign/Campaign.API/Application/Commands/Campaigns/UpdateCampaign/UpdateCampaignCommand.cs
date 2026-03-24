@@ -6,4 +6,5 @@ public record UpdateCampaignCommand(
     string Description,
     DateTime StartDate,
     DateTime EndDate,
-    decimal FinancialGoalAmount) : ICommand;
+    decimal FinancialGoalAmount,
+    Guid RequestId = default) : IIdempotentCommand;

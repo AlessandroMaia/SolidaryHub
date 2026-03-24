@@ -1,6 +1,7 @@
 using Campaign.Domain.Services;
 using Campaign.Infrastructure.Idempotency;
 using Campaign.Infrastructure.Services;
+using ServiceDefaults;
 
 namespace Campaign.Infrastructure;
 

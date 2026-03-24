@@ -25,7 +25,7 @@ public class RequestManager(CampaignContext context) : IRequestManager
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
         {
-            throw new CampaignDomainException($"A requisição {id} já foi processada.", ex);
+            throw new DuplicateRequestException($"A requisição {id} já foi processada.", ex);
         }
     }
 }

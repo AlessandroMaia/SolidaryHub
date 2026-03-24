@@ -2,4 +2,5 @@ namespace Campaign.API.Application.Commands.DonationIntents.ProcessDonationInten
 
 public sealed record ProcessDonationIntentCommand(
     int DonationIntentId,
-    string WorkerName) : ICommand;
+    string WorkerName,
+    Guid RequestId = default) : IIdempotentCommand;
