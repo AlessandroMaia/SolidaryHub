@@ -3,7 +3,6 @@ global using Microsoft.EntityFrameworkCore.Metadata.Builders;
 global using Microsoft.EntityFrameworkCore.Migrations;
 
 global using Microsoft.AspNetCore.Http;
-global using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 global using Microsoft.Extensions.Options;
 global using Microsoft.Extensions.Configuration;
@@ -25,4 +24,5 @@ global using System.Security.Claims;
 global using System.IdentityModel.Tokens.Jwt;
 global using System.Text;
 
-global using SharedKernel;
+global using SharedKernel.Abstractions;
+global using SharedKernel.Security;

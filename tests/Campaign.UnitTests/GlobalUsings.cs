@@ -7,7 +7,6 @@ global using Xunit;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Diagnostics;
-global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;
 
 global using Campaign.API.Application.Commands.Campaigns.CancelCampaign;
@@ -17,7 +16,6 @@ global using Campaign.API.Application.Commands.Campaigns.UpdateCampaign;
 global using Campaign.API.Application.Commands.DonationIntents.CreateDonationIntent;
 global using Campaign.API.Application.Commands.DonationIntents.ProcessDonationIntent;
 global using Campaign.API.Application.Commands.DonationIntents.RejectDonationIntent;
-global using Campaign.API.Application.Commands;
 global using Campaign.API.Application.IntegrationEvents;
 global using Campaign.API.Application.IntegrationEvents.EventHandling;
 global using Campaign.API.Application.IntegrationEvents.Events;
@@ -29,6 +27,7 @@ global using Campaign.API.Application.Queries.DonationIntents.GetDonationIntentB
 global using Campaign.API.Application.Queries.DonationIntents.GetDonationIntentsByCampaign;
 global using Campaign.API.Application.Queries.DonationIntents.GetDonationIntentsByDonor;
 global using Campaign.API.Application.Queries.DonationIntents.GetPendingDonationIntents;
+
 global using Campaign.Domain.AggregatesModel.CampaignAggregate.Entities;
 global using Campaign.Domain.AggregatesModel.CampaignAggregate.Enums;
 global using Campaign.Domain.AggregatesModel.CampaignAggregate.Repositories;
@@ -38,13 +37,16 @@ global using Campaign.Domain.AggregatesModel.DonationIntentAggregate.Enums;
 global using Campaign.Domain.AggregatesModel.DonationIntentAggregate.Repositories;
 global using Campaign.Domain.Exceptions;
 global using Campaign.Domain.Events;
-global using Campaign.Domain.Services;
+
 global using Campaign.Infrastructure;
-global using Campaign.Infrastructure.Idempotency;
 global using Campaign.Infrastructure.Repositories;
-global using Campaign.Infrastructure.Services;
+
 global using EventBus.Abstractions;
+
 global using Mediator;
-global using Mediator.Commands;
-global using ServiceDefaults;
-global using SharedKernel;
+
+global using ServiceDefaults.Behaviors;
+
+global using SharedKernel.Abstractions;
+global using SharedKernel.Domain;
+global using SharedKernel.Security;

@@ -2,7 +2,7 @@
 
 namespace Campaign.API.Application.IntegrationEvents.EventHandling;
 
-internal sealed class DonationIntentReceivedIntegrationEventHandler(
+public sealed class DonationIntentReceivedIntegrationEventHandler(
     ILogger<DonationIntentReceivedIntegrationEventHandler> logger,
     IMediator mediator)
         : IIntegrationEventHandler<DonationIntentReceivedIntegrationEvent>

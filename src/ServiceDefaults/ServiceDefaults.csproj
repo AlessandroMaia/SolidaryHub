@@ -13,9 +13,4 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Mediator\Mediator.csproj" />
-    <ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
-  </ItemGroup>
-
 </Project>

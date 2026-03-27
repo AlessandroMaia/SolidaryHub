@@ -57,31 +57,29 @@ public sealed class DonationIntentTests
     }
 
     [Fact]
-    public void MarkAsProcessing_ShouldAllowPendingAndFailedStates()
+    public void MarkAsProcessing_ShouldAllowOnlyPendingState()
     {
         var pending = CampaignTestFactory.CreateDonationIntent(id: 1);
         pending.MarkAsProcessing("worker-1");
 
         pending.Status.Should().Be(DonationIntentStatus.Processing);
         pending.ProcessingLogs.Should().ContainSingle();
-
-        var failed = CampaignTestFactory.CreateDonationIntent(id: 2);
-        failed.MarkAsFailed("worker-1", "erro", sendToDeadLetter: true);
-        failed.MarkAsProcessing("worker-2");
-
-        failed.Status.Should().Be(DonationIntentStatus.Processing);
-        failed.DeadLetters.Should().ContainSingle();
     }
 
     [Fact]
     public void MarkAsProcessing_WithUnsupportedState_ShouldThrow()
     {
-        var donationIntent = CampaignTestFactory.CreateDonationIntent(id: 1);
-        donationIntent.ValidateForProcessing();
+        var validated = CampaignTestFactory.CreateDonationIntent(id: 1);
+        validated.ValidateForProcessing();
 
-        var act = () => donationIntent.MarkAsProcessing("worker");
+        var failed = CampaignTestFactory.CreateDonationIntent(id: 2);
+        failed.MarkAsFailed("worker", "erro", sendToDeadLetter: true);
 
-        act.Should().Throw<CampaignDomainException>();
+        var validatedAct = () => validated.MarkAsProcessing("worker");
+        var failedAct = () => failed.MarkAsProcessing("worker");
+
+        validatedAct.Should().Throw<CampaignDomainException>();
+        failedAct.Should().Throw<CampaignDomainException>();
     }
 
     [Fact]

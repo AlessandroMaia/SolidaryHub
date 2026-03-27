@@ -20,21 +20,25 @@ global using Mediator.Commands;
 global using Mediator.Queries;
 global using Mediator.Extensions;
 
-global using FluentValidation;
-
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-global using EventBus.Abstractions;
 global using EventBus.Events;
-
-global using Scalar.AspNetCore;
-
-global using ServiceDefaults;
-
-global using System.Reflection;
-
+global using EventBus.Abstractions;
 global using EventBus.Extensions;
 
-global using SharedKernel;
+global using FluentValidation;
+global using Scalar.AspNetCore;
+global using System.Reflection;
+
+global using ServiceDefaults.Authentication;
+global using ServiceDefaults.Authorization;
+global using ServiceDefaults.Behaviors;
+global using ServiceDefaults.Contracts;
+global using ServiceDefaults.Middleware;
+global using ServiceDefaults.OpenApi;
+global using ServiceDefaults.Web;
+
+global using SharedKernel.Pagination;
+global using SharedKernel.Security;

@@ -92,9 +92,7 @@ public class DonationIntent : Entity, IAggregateRoot
 
     public void MarkAsProcessing(string workerName)
     {
-        if (Status is not DonationIntentStatus.Pending
-        and not DonationIntentStatus.Published
-        and not DonationIntentStatus.Failed)
+        if (Status != DonationIntentStatus.Pending)
             throw new CampaignDomainException("A intenção de doação não está disponível para processamento.");
 
         Status = DonationIntentStatus.Processing;

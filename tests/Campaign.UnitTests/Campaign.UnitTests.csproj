@@ -25,6 +25,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\BuildingBlocks\EventBus\EventBus.csproj" />
+      <ProjectReference Include="..\..\src\BuildingBlocks\Mediator\Mediator.csproj" />
+      <ProjectReference Include="..\..\src\BuildingBlocks\ServiceDefaults\ServiceDefaults.csproj" />
+      <ProjectReference Include="..\..\src\BuildingBlocks\SharedKernel\SharedKernel.csproj" />
       <ProjectReference Include="..\..\src\Services\Campaign\Campaign.API\Campaign.API.csproj" />
       <ProjectReference Include="..\..\src\Services\Campaign\Campaign.Domain\Campaign.Domain.csproj" />
       <ProjectReference Include="..\..\src\Services\Campaign\Campaign.Infrastructure\Campaign.Infrastructure.csproj" />

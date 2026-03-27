@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Mediator\Mediator.csproj" />
-    <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Mediator\Mediator.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\SharedKernel\SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

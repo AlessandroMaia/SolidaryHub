@@ -1,4 +1,3 @@
-using Campaign.API.Application.IntegrationEvents;
 using Campaign.API.Application.IntegrationEvents.EventHandling;
 using EventBusRabbitMQ;
 

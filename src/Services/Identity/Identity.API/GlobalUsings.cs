@@ -1,7 +1,14 @@
 ﻿global using System.Reflection;
 
-global using ServiceDefaults;
-global using SharedKernel;
+global using ServiceDefaults.Authentication;
+global using ServiceDefaults.Authorization;
+global using ServiceDefaults.Behaviors;
+global using ServiceDefaults.Middleware;
+global using ServiceDefaults.OpenApi;
+global using ServiceDefaults.Web;
+
+global using SharedKernel.Pagination;
+global using SharedKernel.Security;
 
 global using Mediator;
 global using Mediator.Commands;
@@ -23,10 +30,6 @@ global using Identity.API.Application.ViewModels;
 global using Identity.API.Extensions;
 
 global using Microsoft.EntityFrameworkCore;
-global using Microsoft.AspNetCore.Authentication;
-global using Microsoft.AspNetCore.Authentication.JwtBearer;
-global using Microsoft.AspNetCore.OpenApi;
 global using Microsoft.AspNetCore.Mvc;
-global using Microsoft.OpenApi;
 
 global using Scalar.AspNetCore;

@@ -1,4 +1,5 @@
-﻿global using SharedKernel;
+﻿global using SharedKernel.Abstractions;
+global using SharedKernel.Domain;
 
 global using Mediator.Notifications;
 
