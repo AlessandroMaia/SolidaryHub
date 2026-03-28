@@ -7,13 +7,14 @@ public sealed class CampaignQueryHandlerTests
     [Fact]
     public async Task GetCampaignById_ShouldReturnDetails()
     {
+        var ct = TestContext.Current.CancellationToken;
         await using var context = CampaignContextFactory.Create();
         var campaign = CampaignTestFactory.CreateCampaign(id: 1);
         context.Campaigns.Add(campaign);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(ct);
 
         var handler = new GetCampaignByIdQueryHandler(context);
-        var result = await handler.Handle(new GetCampaignByIdQuery(1), CancellationToken.None);
+        var result = await handler.Handle(new GetCampaignByIdQuery(1), ct);
 
         result.Should().NotBeNull();
         result!.Id.Should().Be(1);
@@ -23,6 +24,7 @@ public sealed class CampaignQueryHandlerTests
     [Fact]
     public async Task GetActiveCampaigns_ShouldReturnPagedActiveCampaignsOrderedByEndDate()
     {
+        var ct = TestContext.Current.CancellationToken;
         await using var context = CampaignContextFactory.Create();
         var first = CampaignTestFactory.CreateCampaign(id: 1, endDate: DateTime.UtcNow.AddDays(1));
         var second = CampaignTestFactory.CreateCampaign(id: 2, endDate: DateTime.UtcNow.AddDays(5));
@@ -30,10 +32,10 @@ public sealed class CampaignQueryHandlerTests
         cancelled.Cancel(1);
 
         context.Campaigns.AddRange(first, second, cancelled);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(ct);
 
         var handler = new GetActiveCampaignsQueryHandler(context);
-        var result = await handler.Handle(new GetActiveCampaignsQuery(1, 10), CancellationToken.None);
+        var result = await handler.Handle(new GetActiveCampaignsQuery(1, 10), ct);
 
         result.PageNumber.Should().Be(1);
         result.PageSize.Should().Be(10);
@@ -44,18 +46,19 @@ public sealed class CampaignQueryHandlerTests
     [Fact]
     public async Task GetCampaignsAndPublicPanel_ShouldReturnCorrectPaging()
     {
+        var ct = TestContext.Current.CancellationToken;
         await using var context = CampaignContextFactory.Create();
         context.Campaigns.AddRange(
             CampaignTestFactory.CreateCampaign(id: 1),
             CampaignTestFactory.CreateCampaign(id: 2),
             CampaignTestFactory.CreateCampaign(id: 3));
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(ct);
 
         var campaignsHandler = new GetCampaignsQueryHandler(context);
         var publicPanelHandler = new GetCampaignPublicPanelQueryHandler(context);
 
-        var campaigns = await campaignsHandler.Handle(new GetCampaignsQuery(1, 2), CancellationToken.None);
-        var publicPanel = await publicPanelHandler.Handle(new GetCampaignPublicPanelQuery(2, 1), CancellationToken.None);
+        var campaigns = await campaignsHandler.Handle(new GetCampaignsQuery(1, 2), ct);
+        var publicPanel = await publicPanelHandler.Handle(new GetCampaignPublicPanelQuery(2, 1), ct);
 
         campaigns.PageNumber.Should().Be(1);
         campaigns.PageSize.Should().Be(2);

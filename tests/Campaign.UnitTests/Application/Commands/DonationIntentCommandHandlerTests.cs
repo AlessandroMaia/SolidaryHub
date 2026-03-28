@@ -39,12 +39,9 @@ public sealed class DonationIntentCommandHandlerTests
 
         result.Should().Be(77);
         await _integrationEventService.Received(1).AddAndSaveEventAsync(
-            Arg.Is<DonationIntentReceivedIntegrationEvent>(e =>
+            Arg.Is<DonationIntentProcessingIntegrationEvent>(e =>
                 e.DonationIntentId == 77 &&
-                e.CampaignId == 10 &&
-                e.DonorUserId == 20 &&
-                e.Amount == 30m &&
-                e.CorrelationId == "corr-1"),
+                e.WorkerName == "donation-processor"),
             Arg.Any<CancellationToken>());
     }
 
@@ -140,5 +137,43 @@ public sealed class DonationIntentCommandHandlerTests
         campaign.DonationLedger.Should().ContainSingle();
         _donationIntentRepository.Received(1).Update(donationIntent);
         _campaignRepository.Received(1).Update(campaign);
+    }
+
+    [Fact]
+    public async Task FailDonationIntentProcessing_ShouldMarkAsFailedAndPersist()
+    {
+        var donationIntent = CampaignTestFactory.CreateDonationIntent(id: 1);
+        _donationIntentRepository.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(donationIntent);
+
+        var handler = new FailDonationIntentProcessingCommandHandler(_donationIntentRepository);
+
+        await handler.Handle(
+            new FailDonationIntentProcessingCommand(1, "worker-1", "falhou"),
+            CancellationToken.None);
+
+        donationIntent.Status.Should().Be(DonationIntentStatus.Failed);
+        donationIntent.ProcessingLogs.Should().ContainSingle();
+        donationIntent.ProcessingLogs.Single().WorkerName.Should().Be("worker-1");
+        donationIntent.ProcessingLogs.Single().ErrorMessage.Should().Be("falhou");
+        donationIntent.DeadLetters.Should().ContainSingle();
+        donationIntent.DeadLetters.Single().ErrorMessage.Should().Be("falhou");
+        _donationIntentRepository.Received(1).Update(donationIntent);
+        await _donationIntentRepository.UnitOfWork.Received(1).SaveEntitiesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task FailDonationIntentProcessing_WhenDonationIntentDoesNotExist_ShouldThrow()
+    {
+        _donationIntentRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns((DonationIntent?)null);
+
+        var handler = new FailDonationIntentProcessingCommandHandler(_donationIntentRepository);
+
+        var act = async () => await handler.Handle(
+            new FailDonationIntentProcessingCommand(1, "worker-1", "falhou"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<CampaignDomainException>()
+            .WithMessage("Intenção de doação não encontrada");
     }
 }

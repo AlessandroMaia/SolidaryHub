@@ -12,7 +12,7 @@ public class DonationIntentProcessingIntegrationEventHandler(
 
         IntegrationEvent integrationEvent;
 
-        if (options.CurrentValue.Succeeded)
+        if (options.CurrentValue.Succeded)
             integrationEvent = new DonationIntentProcessedIntegrationEvent(@event.DonationIntentId, @event.WorkerName);
         else
             integrationEvent = new DonationIntentFailedIntegrationEvent(@event.DonationIntentId, @event.WorkerName, "falhou");

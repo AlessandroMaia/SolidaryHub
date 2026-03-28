@@ -1,5 +1,4 @@
 ﻿using Campaign.API.Application.Commands.DonationIntents.FailDonationIntentProcessing;
-using Campaign.API.Application.IntegrationEvents.Events;
 
 namespace Campaign.API.Application.IntegrationEvents.EventHandling;
 

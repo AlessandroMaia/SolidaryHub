@@ -1,5 +1,4 @@
-﻿using Campaign.API.Application.Commands.DonationIntents.CompleteDonationIntentProcessing;
-using Campaign.API.Application.IntegrationEvents.Events;
+﻿using Campaign.API.Application.Commands.DonationIntents.ProcessDonationIntent;
 
 namespace Campaign.API.Application.IntegrationEvents.EventHandling;
 
@@ -15,7 +14,7 @@ internal sealed class DonationIntentProcessedIntegrationEventHandler(
             @event.DonationIntentId,
             @event.WorkerName);
 
-        await mediator.Send(new CompleteDonationIntentProcessingCommand(
+        await mediator.Send(new ProcessDonationIntentCommand(
             @event.DonationIntentId,
             @event.WorkerName));
     }

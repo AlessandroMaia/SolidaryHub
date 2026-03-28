@@ -1,8 +1,6 @@
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddHostedService<Worker>();
-
-builder.AddRabbitMqEventBus(builder.Configuration.GetConnectionString("RabbitMQ")!, "EventBus")
+builder.AddRabbitMqEventBus(builder.Configuration.GetConnectionString("RabbitMQ")!, "donation-processor")
     .AddSubscription<DonationIntentProcessingIntegrationEvent, DonationIntentProcessingIntegrationEventHandler>();
 
 builder.Services.AddOptions<DonationOptions>()

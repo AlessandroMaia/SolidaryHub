@@ -121,6 +121,22 @@ services:
     networks:
       - sh-network
 
+  donation.processor:
+    image: ${DOCKER_REGISTRY:-sh}/donation.processor:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/Workers/DonationProcessor/Dockerfile
+    container_name: sh-donation.processor
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__RabbitMQ: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      DonationOptions__Succeded: ${DONATION_PROCESSED}
+    networks:
+      - sh-network
+
 volumes:
   postgres-data:
   pgadmin-data:

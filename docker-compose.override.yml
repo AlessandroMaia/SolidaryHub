@@ -32,3 +32,9 @@ services:
       JwtSettings__RefreshTokenExpirationDays: 7
     ports:
       - "5002:8080"
+
+  donation.processor:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__RabbitMQ: amqp://solidarity_user:Solidarity123@rabbitmq:5672
+      DonationOptions__Succeded: "true"

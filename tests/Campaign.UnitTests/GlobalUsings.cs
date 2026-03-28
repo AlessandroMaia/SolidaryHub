@@ -14,6 +14,7 @@ global using Campaign.API.Application.Commands.Campaigns.CompleteCampaign;
 global using Campaign.API.Application.Commands.Campaigns.CreateCampaign;
 global using Campaign.API.Application.Commands.Campaigns.UpdateCampaign;
 global using Campaign.API.Application.Commands.DonationIntents.CreateDonationIntent;
+global using Campaign.API.Application.Commands.DonationIntents.FailDonationIntentProcessing;
 global using Campaign.API.Application.Commands.DonationIntents.ProcessDonationIntent;
 global using Campaign.API.Application.Commands.DonationIntents.RejectDonationIntent;
 global using Campaign.API.Application.IntegrationEvents;

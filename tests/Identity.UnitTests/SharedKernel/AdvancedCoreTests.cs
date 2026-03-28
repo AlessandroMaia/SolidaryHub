@@ -26,11 +26,14 @@ public sealed class AdvancedCoreTests
 
         var domain = new TestDomainException("domain", inner);
         var identity = new IdentityDomainException("identity", inner);
+        var duplicateRequest = new DuplicateRequestException("duplicate", inner);
 
         domain.Message.Should().Be("domain");
         domain.InnerException.Should().BeSameAs(inner);
         identity.Message.Should().Be("identity");
         identity.InnerException.Should().BeSameAs(inner);
+        duplicateRequest.Message.Should().Be("duplicate");
+        duplicateRequest.InnerException.Should().BeSameAs(inner);
         new IdentityDomainException().Message.Should().NotBeNull();
     }
 
@@ -50,10 +53,16 @@ public sealed class AdvancedCoreTests
         entity.ClearDomainEvents();
         entity.DomainEvents.Should().BeEmpty();
 
-        entity.Equals(null).Should().BeFalse();
-        entity.Equals(entity).Should().BeTrue();
-        (entity == null!).Should().BeFalse();
-        ((TestEntity?)null == (TestEntity?)null).Should().BeTrue();
+        object? nullObject = null;
+        TestEntity? nullLeft = null;
+        TestEntity? nullRight = null;
+
+        entity.Equals(nullObject).Should().BeFalse();
+        entity.Equals((object)entity).Should().BeTrue();
+#pragma warning disable CS8604
+        (entity == nullLeft).Should().BeFalse();
+        (nullLeft == nullRight).Should().BeTrue();
+#pragma warning restore CS8604
     }
 
     [Fact]

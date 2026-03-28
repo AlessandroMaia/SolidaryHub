@@ -1,3 +1,3 @@
 ﻿namespace DonationProcessor;
 
-public record DonationOptions(bool Succeeded);
+public record DonationOptions(bool Succeded);

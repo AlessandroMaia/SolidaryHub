@@ -7,6 +7,7 @@ public sealed class UserQueryHandlerTests
     [Fact]
     public async Task GetUserById_ShouldReturnProjectedUser()
     {
+        var ct = TestContext.Current.CancellationToken;
         await using var context = IdentityContextFactory.Create();
         var role = UserTestFactory.CreateRole(Roles.Manager, 1);
         var user = UserTestFactory.CreateActiveUser(id: 10);
@@ -14,11 +15,11 @@ public sealed class UserQueryHandlerTests
 
         context.Roles.Add(role);
         context.Users.Add(user);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(ct);
 
         var handler = new GetUserByIdQueryHandler(context);
 
-        var result = await handler.Handle(new GetUserByIdQuery(10), CancellationToken.None);
+        var result = await handler.Handle(new GetUserByIdQuery(10), ct);
 
         result.Should().NotBeNull();
         result!.Id.Should().Be(10);
@@ -29,6 +30,7 @@ public sealed class UserQueryHandlerTests
     [Fact]
     public async Task GetAllUsers_ShouldFilterByStatusAndRole()
     {
+        var ct = TestContext.Current.CancellationToken;
         await using var context = IdentityContextFactory.Create();
         var donorRole = UserTestFactory.CreateRole(Roles.Donor, 1);
         var managerRole = UserTestFactory.CreateRole(Roles.Manager, 2);
@@ -44,12 +46,12 @@ public sealed class UserQueryHandlerTests
 
         context.Roles.AddRange(donorRole, managerRole);
         context.Users.AddRange(donor, manager, inactive);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(ct);
 
         var handler = new GetAllUsersQueryHandler(context);
 
-        var byRole = await handler.Handle(new GetAllUsersQuery(Role: Roles.Donor), CancellationToken.None);
-        var byStatus = await handler.Handle(new GetAllUsersQuery(Status: nameof(UserStatus.Inactive)), CancellationToken.None);
+        var byRole = await handler.Handle(new GetAllUsersQuery(Role: Roles.Donor), ct);
+        var byStatus = await handler.Handle(new GetAllUsersQuery(Status: nameof(UserStatus.Inactive)), ct);
 
         byRole.TotalRecords.Should().Be(2);
         byRole.Data.Select(u => u.Email).Should().BeEquivalentTo(["donor@example.com", "inactive@example.com"]);

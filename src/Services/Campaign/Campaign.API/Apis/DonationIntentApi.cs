@@ -51,14 +51,6 @@ public static class DonationIntentApi
             .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
             .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
-        managerGroup.MapPut("/{id:int}/process", Process)
-            .WithName("ProcessarIntencaoDeDoacao")
-            .WithSummary("Processa uma intenção de doação")
-            .WithDescription("Processa uma intenção de doação existente.")
-            .Produces(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
-
         managerGroup.MapPut("/{id:int}/reject", Reject)
             .WithName("RejeitarIntencaoDeDoacao")
             .WithSummary("Rejeita uma intenção de doação")
@@ -114,20 +106,6 @@ public static class DonationIntentApi
 
         var id = await mediator.Send(command, ct);
         return TypedResults.Created($"/api/donation-intents/{id}");
-    }
-
-    private static async Task<IResult> Process(
-        [FromHeader(Name = "x-requestid")] Guid? requestId,
-        [FromRoute] int id,
-        [FromBody] DonationIntentProcessRequestViewModel request,
-        IMediator mediator,
-        CancellationToken ct)
-    {
-        var effectiveRequestId = requestId.GetValueOrDefault(Guid.NewGuid());
-        var command = new ProcessDonationIntentCommand(id, request.WorkerName, effectiveRequestId);
-
-        await mediator.Send(command, ct);
-        return Results.Ok();
     }
 
     private static async Task<IResult> Reject(

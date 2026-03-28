@@ -30,12 +30,9 @@ internal sealed class CreateDonationIntentCommandHandler(
         await donationIntentRepository.UnitOfWork.SaveEntitiesAsync(ct);
 
         await integrationEventService.AddAndSaveEventAsync(
-            new DonationIntentReceivedIntegrationEvent(
+            new DonationIntentProcessingIntegrationEvent(
                 donationIntent.Id,
-                donationIntent.CampaignId,
-                donationIntent.DonorUserId,
-                donationIntent.Amount,
-                donationIntent.CorrelationId),
+                "donation-processor"),
             ct);
 
         return donationIntent.Id;

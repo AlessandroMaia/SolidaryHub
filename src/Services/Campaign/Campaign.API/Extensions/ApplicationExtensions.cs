@@ -46,7 +46,9 @@ public static class ApplicationExtensions
     public static IHostApplicationBuilder ConfigureEventBus(this IHostApplicationBuilder builder)
     {
         builder.AddRabbitMqEventBus(builder.Configuration.GetConnectionString("RabbitMQ")!, "campaign-service")
-            .AddSubscription<DonationIntentReceivedIntegrationEvent, DonationIntentReceivedIntegrationEventHandler>();
+            .AddSubscription<DonationIntentProcessedIntegrationEvent, DonationIntentProcessedIntegrationEventHandler>()
+            .AddSubscription<DonationIntentFailedIntegrationEvent, DonationIntentFailedIntegrationEventHandler>();
+
 
         return builder;
     }
