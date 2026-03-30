@@ -24,7 +24,12 @@ public sealed class RabbitMQEventBus(
     {
         var routingKey = @event.GetType().Name;
 
-        using var activity = _activitySource.StartActivity($"{routingKey} publish", ActivityKind.Client);
+        using var activity = _activitySource.StartActivity($"{routingKey} publish", ActivityKind.Producer);
+        activity?.SetTag("messaging.system", "rabbitmq");
+        activity?.SetTag("messaging.destination.name", ExchangeName);
+        activity?.SetTag("messaging.destination_kind", "exchange");
+        activity?.SetTag("messaging.rabbitmq.routing_key", routingKey);
+        activity?.SetTag("messaging.operation", "publish");
 
         var properties = new BasicProperties
         {
@@ -116,7 +121,15 @@ public sealed class RabbitMQEventBus(
             });
 
         using var activity = _activitySource.StartActivity($"{eventName} process",
-            ActivityKind.Server, parentContext.ActivityContext);
+            ActivityKind.Consumer, parentContext.ActivityContext);
+
+        activity?.SetTag("messaging.system", "rabbitmq");
+        activity?.SetTag("messaging.destination.name", ExchangeName);
+        activity?.SetTag("messaging.destination_kind", "exchange");
+        activity?.SetTag("messaging.rabbitmq.routing_key", eventName);
+        activity?.SetTag("messaging.consumer.queue", _queueName);
+        activity?.SetTag("messaging.operation", "process");
+
 
         try
         {

@@ -1,3 +1,6 @@
 ﻿namespace DonationProcessor;
 
-public record DonationOptions(bool Succeded);
+public sealed record DonationOptions
+{
+    public bool Succeded { get; init; }
+}

@@ -1,9 +1,19 @@
 using Campaign.API.Apis;
 using Campaign.API.Extensions;
+using Campaign.API.Observability;
+using OpenTelemetry.Metrics;
+using Serilog;
+using ServiceDefaults.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.ConfigureEventBus();
+builder
+    .AddObservability()
+    .AddPrometheusMetrics()
+    .ConfigureEventBus();
+
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics => metrics.AddMeter(CampaignMetrics.MeterName));
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
@@ -15,9 +25,12 @@ builder.Services
 
 var app = builder.Build();
 
+app.UseRequestCorrelation();
+app.UseSerilogRequestLogging();
 app.UseExceptionHandling();
 app.ApplyMigrations();
 app.MapDefaultEndpoints();
+app.UsePrometheusMetrics();
 app.UseOpenApiDocumentation();
 app.UseAuthentication();
 app.UseAuthorization();

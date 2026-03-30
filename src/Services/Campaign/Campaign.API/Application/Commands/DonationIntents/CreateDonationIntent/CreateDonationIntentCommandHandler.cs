@@ -1,5 +1,7 @@
 namespace Campaign.API.Application.Commands.DonationIntents.CreateDonationIntent;
 
+using Campaign.API.Observability;
+
 internal sealed class CreateDonationIntentCommandHandler(
     IDonationIntentRepository donationIntentRepository,
     ICampaignRepository campaignRepository,
@@ -28,6 +30,8 @@ internal sealed class CreateDonationIntentCommandHandler(
 
         donationIntentRepository.Add(donationIntent);
         await donationIntentRepository.UnitOfWork.SaveEntitiesAsync(ct);
+
+        CampaignMetrics.DonationIntentCreated(command.Currency, command.Source);
 
         await integrationEventService.AddAndSaveEventAsync(
             new DonationIntentProcessingIntegrationEvent(

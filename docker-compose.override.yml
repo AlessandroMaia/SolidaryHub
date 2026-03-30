@@ -12,6 +12,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__IdentityDb: Host=postgres;Port=5432;Database=identity_db;Username=identity_user;Password=Identity@123
+      ConnectionStrings__Loki: http://loki:3100
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
       JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
       JwtSettings__Issuer: SH.IdentityService
       JwtSettings__Audience: SH.Client
@@ -25,6 +27,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__CampaignDb: Host=postgres;Port=5432;Database=campaign_db;Username=campaign_user;Password=Campaign@123
       ConnectionStrings__RabbitMQ: amqp://solidarity_user:Solidarity123@rabbitmq:5672
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      ConnectionStrings__Loki: http://loki:3100
       JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
       JwtSettings__Issuer: SH.IdentityService
       JwtSettings__Audience: SH.Client
@@ -37,4 +41,7 @@ services:
     environment:
       DOTNET_ENVIRONMENT: Development
       ConnectionStrings__RabbitMQ: amqp://solidarity_user:Solidarity123@rabbitmq:5672
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      ConnectionStrings__Loki: http://loki:3100
       DonationOptions__Succeded: "true"
+      Prometheus__UriPrefixes__0: http://+:9464/

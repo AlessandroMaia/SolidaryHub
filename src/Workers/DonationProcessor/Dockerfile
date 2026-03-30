@@ -6,6 +6,9 @@ WORKDIR /src
 COPY ["Directory.Packages.props", "."]
 COPY ["Directory.Build.props", "."]
 
+COPY ["src/BuildingBlocks/SharedKernel/SharedKernel.csproj", "src/BuildingBlocks/SharedKernel/"]
+COPY ["src/BuildingBlocks/Mediator/Mediator.csproj", "src/BuildingBlocks/Mediator/"]
+COPY ["src/BuildingBlocks/ServiceDefaults/ServiceDefaults.csproj", "src/BuildingBlocks/ServiceDefaults/"]
 COPY ["src/BuildingBlocks/EventBus/EventBus.csproj", "src/BuildingBlocks/EventBus/"]
 COPY ["src/BuildingBlocks/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "src/BuildingBlocks/EventBusRabbitMQ/"]
 
@@ -28,6 +31,7 @@ LABEL org.opencontainers.image.title="Donation Processor" \
       org.opencontainers.image.authors="Alessandro (DEV)" 
 
 WORKDIR /app
+EXPOSE 9464
 USER $APP_UID
 
 COPY --from=build /app/publish .

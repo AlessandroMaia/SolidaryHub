@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: SolidarityHub
+    orgId: 1
+    folder: SolidarityHub
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

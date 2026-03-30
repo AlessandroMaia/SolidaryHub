@@ -1,5 +1,7 @@
 namespace Campaign.API.Application.Commands.DonationIntents.ProcessDonationIntent;
 
+using Campaign.API.Observability;
+
 internal sealed class ProcessDonationIntentCommandHandler(
     IDonationIntentRepository donationIntentRepository,
     ICampaignRepository campaignRepository)
@@ -23,6 +25,7 @@ internal sealed class ProcessDonationIntentCommandHandler(
             donationIntent.CorrelationId);
 
         donationIntent.MarkAsProcessed(command.WorkerName);
+        CampaignMetrics.DonationIntentProcessed(donationIntent.Currency, donationIntent.Amount);
 
         donationIntentRepository.Update(donationIntent);
         campaignRepository.Update(campaign);

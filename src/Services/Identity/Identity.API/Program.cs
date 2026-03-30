@@ -1,6 +1,12 @@
 using Identity.API.Apis;
+using Serilog;
+using ServiceDefaults.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder
+    .AddObservability()
+    .AddPrometheusMetrics();
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
@@ -12,10 +18,15 @@ builder.Services
 
 var app = builder.Build();
 
+app.UseRequestCorrelation();
+app.UseSerilogRequestLogging();
 app.MapDefaultEndpoints();
+app.UsePrometheusMetrics();
 app.UseExceptionHandling();
 app.ApplyMigrations();
+
 await app.SeedAdminUserAsync();
+
 app.UseOpenApiDocumentation();
 app.UseAuthentication();
 app.UseAuthorization();
