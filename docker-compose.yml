@@ -28,7 +28,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+      - ./platform/data/postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
     networks:
       - sh-network
 
@@ -100,7 +100,7 @@ services:
       - "9090:9090"
     volumes:
       - prometheus-data:/prometheus
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./platform/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
       - campaign.api
       - identity.api
@@ -120,11 +120,11 @@ services:
       - loki
       - jaeger
       - prometheus
-    networks:
-      - sh-network
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./platform/observability/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - sh-network
 
   identity.api:
     image: ${DOCKER_REGISTRY:-sh}/identity.api:${TAG:-latest}

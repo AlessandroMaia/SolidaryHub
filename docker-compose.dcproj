@@ -13,10 +13,5 @@
     </None>
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
-    <None Include="grafana\provisioning\datasources\datasources.yml" />
-    <None Include="grafana\provisioning\dashboards\dashboard.yml" />
-    <None Include="grafana\provisioning\dashboards\json\solidarityhub-overview.json" />
-    <None Include="postgres\init-multiple-dbs.sh" />
-    <None Include="prometheus\prometheus.yml" />
   </ItemGroup>
 </Project>

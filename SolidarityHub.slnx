@@ -1,4 +1,27 @@
 <Solution>
+  <Folder Name="/docs/" />
+  <Folder Name="/platform/" />
+  <Folder Name="/platform/data/" />
+  <Folder Name="/platform/data/postgres/">
+    <File Path="platform/data/postgres/init-multiple-dbs.sh" />
+  </Folder>
+  <Folder Name="/platform/gateway/" />
+  <Folder Name="/platform/gateway/krakend/" />
+  <Folder Name="/platform/observability/" />
+  <Folder Name="/platform/observability/grafana/" />
+  <Folder Name="/platform/observability/grafana/provisioning/" />
+  <Folder Name="/platform/observability/grafana/provisioning/dashboards/">
+    <File Path="platform/observability/grafana/provisioning/dashboards/dashboard.yml" />
+  </Folder>
+  <Folder Name="/platform/observability/grafana/provisioning/dashboards/json/">
+    <File Path="platform/observability/grafana/provisioning/dashboards/json/solidarityhub-overview.json" />
+  </Folder>
+  <Folder Name="/platform/observability/grafana/provisioning/datasources/">
+    <File Path="platform/observability/grafana/provisioning/datasources/datasources.yml" />
+  </Folder>
+  <Folder Name="/platform/observability/prometheus/">
+    <File Path="platform/observability/prometheus/prometheus.yml" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
