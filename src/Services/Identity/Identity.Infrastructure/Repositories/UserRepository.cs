@@ -40,15 +40,19 @@ public class UserRepository(IdentityContext context) : IUserRepository
             .FirstOrDefaultAsync(u => u.Email.Value == normalizedEmail, ct);
     }
 
-    public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken ct = default) 
-        => await _context.Users
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken ct = default)
+    {
+        var hashedRefreshToken = RefreshToken.HashToken(refreshToken);
+
+        return await _context.Users
             .Include(u => u.RefreshTokens)
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u =>
-                u.RefreshTokens.Any(rt => rt.Token == refreshToken &&
+                u.RefreshTokens.Any(rt => (rt.Token == hashedRefreshToken || rt.Token == refreshToken) &&
                                           rt.RevokedAt == null &&
                                           rt.ExpiresAt > DateTime.UtcNow), ct);
+    }
 
     public async Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default)
     {

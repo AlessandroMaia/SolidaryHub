@@ -31,7 +31,7 @@ public sealed class RefreshTokenCommandHandlerTests
         var result = await _handler.Handle(new RefreshTokenCommand("old-token"), CancellationToken.None);
 
         oldToken.IsRevoked.Should().BeTrue();
-        user.RefreshTokens.Should().Contain(rt => rt.Token == "new-refresh");
+        user.RefreshTokens.Should().Contain(rt => rt.Matches("new-refresh"));
         result.AccessToken.Should().Be("new-access");
         result.RefreshToken.Should().Be("new-refresh");
         result.Roles.Should().ContainSingle(Roles.Manager);

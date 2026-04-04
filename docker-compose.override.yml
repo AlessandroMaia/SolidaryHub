@@ -18,7 +18,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Loki: http://loki:3100
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
-      JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
+      JwtSettings__Secret: ${JWT_SECRET}
       JwtSettings__Issuer: SH.IdentityService
       JwtSettings__Audience: SH.Client
       JwtSettings__AccessTokenExpirationMinutes: 60
@@ -29,36 +29,38 @@ services:
   identity.api:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__IdentityDb: Host=postgres;Port=5432;Database=identity_db;Username=identity_user;Password=Identity@123
+      ConnectionStrings__IdentityDb: Host=postgres;Port=5432;Database=${IDENTITY_DB_NAME};Username=${IDENTITY_DB_USER};Password=${IDENTITY_DB_PASSWORD}
       ConnectionStrings__Loki: http://loki:3100
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
-      JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
+      JwtSettings__Secret: ${JWT_SECRET}
       JwtSettings__Issuer: SH.IdentityService
       JwtSettings__Audience: SH.Client
       JwtSettings__AccessTokenExpirationMinutes: 60
       JwtSettings__RefreshTokenExpirationDays: 7
-    ports:
-      - "5001:8080"
+      AdminSeed__Enabled: ${IDENTITY_ADMIN_SEED_ENABLED:-false}
+      AdminSeed__FirstName: ${IDENTITY_ADMIN_SEED_FIRST_NAME:-Administrador}
+      AdminSeed__LastName: ${IDENTITY_ADMIN_SEED_LAST_NAME:-ONG}
+      AdminSeed__Email: ${IDENTITY_ADMIN_SEED_EMAIL:-admin@conexaosolidaria.local}
+      AdminSeed__Password: ${IDENTITY_ADMIN_SEED_PASSWORD:-change-me-admin-seed-password}
+      AdminSeed__Cpf: ${IDENTITY_ADMIN_SEED_CPF:-52998224725}
 
   campaign.api:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__CampaignDb: Host=postgres;Port=5432;Database=campaign_db;Username=campaign_user;Password=Campaign@123
-      ConnectionStrings__RabbitMQ: amqp://solidarity_user:Solidarity123@rabbitmq:5672
+      ConnectionStrings__CampaignDb: Host=postgres;Port=5432;Database=${CAMPAIGN_DB_NAME};Username=${CAMPAIGN_DB_USER};Password=${CAMPAIGN_DB_PASSWORD}
+      ConnectionStrings__RabbitMQ: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
       ConnectionStrings__Loki: http://loki:3100
-      JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
+      JwtSettings__Secret: ${JWT_SECRET}
       JwtSettings__Issuer: SH.IdentityService
       JwtSettings__Audience: SH.Client
       JwtSettings__AccessTokenExpirationMinutes: 60
       JwtSettings__RefreshTokenExpirationDays: 7
-    ports:
-      - "5002:8080"
 
   donation.processor:
     environment:
       DOTNET_ENVIRONMENT: Development
-      ConnectionStrings__RabbitMQ: amqp://solidarity_user:Solidarity123@rabbitmq:5672
+      ConnectionStrings__RabbitMQ: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
       ConnectionStrings__Loki: http://loki:3100
       DonationOptions__Succeded: "true"

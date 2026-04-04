@@ -97,7 +97,7 @@ public class User : Entity, IAggregateRoot
 
     public void RevokeRefreshToken(string token)
     {
-        var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Token == token);
+        var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Matches(token));
         refreshToken?.Revoke();
     }
 
@@ -108,7 +108,7 @@ public class User : Entity, IAggregateRoot
     }
 
     public RefreshToken? GetActiveRefreshToken(string token)
-        => _refreshTokens.FirstOrDefault(rt => rt.Token == token && rt.IsActive);
+        => _refreshTokens.FirstOrDefault(rt => rt.Matches(token) && rt.IsActive);
 
     public bool ValidatePassword(Password inputPasswordHash)
         => PasswordHash.Equals(inputPasswordHash);

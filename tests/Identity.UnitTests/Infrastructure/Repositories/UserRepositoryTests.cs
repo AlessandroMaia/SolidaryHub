@@ -52,7 +52,7 @@ public sealed class UserRepositoryTests
         (await repository.GetByIdWithRolesAsync(1, ct))!
             .UserRoles.Should().ContainSingle(ur => ur.Role!.Name == Roles.Donor);
         (await repository.GetByIdWithTokensAsync(1, ct))!
-            .RefreshTokens.Should().ContainSingle(rt => rt.Token == "active-token");
+            .RefreshTokens.Should().ContainSingle(rt => rt.Matches("active-token"));
         (await repository.GetByEmailAsync("ACTIVE@EXAMPLE.COM", ct))!
             .Id.Should().Be(1);
         (await repository.GetByRefreshTokenAsync("active-token", ct))!

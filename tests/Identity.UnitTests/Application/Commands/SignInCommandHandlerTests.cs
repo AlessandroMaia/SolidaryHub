@@ -38,7 +38,7 @@ public sealed class SignInCommandHandlerTests
         result.AccessToken.Should().Be("access");
         result.RefreshToken.Should().Be("refresh");
         result.Roles.Should().ContainSingle(Roles.Donor);
-        user.RefreshTokens.Should().ContainSingle(rt => rt.Token == "refresh");
+        user.RefreshTokens.Should().ContainSingle(rt => rt.Matches("refresh"));
         user.LastLoginAt.Should().NotBeNull();
         _userRepository.Received(1).Update(user);
         await _unitOfWork.Received(1).SaveEntitiesAsync(Arg.Any<CancellationToken>());

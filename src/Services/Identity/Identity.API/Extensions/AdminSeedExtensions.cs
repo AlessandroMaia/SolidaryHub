@@ -60,7 +60,7 @@ public static class AdminSeedExtensions
         public string FirstName { get; init; } = "Administrador";
         public string LastName { get; init; } = "ONG";
         public string Email { get; init; } = "admin@conexaosolidaria.local";
-        public string Password { get; init; } = "Admin@123";
+        public string Password { get; init; } = "change-me-admin-seed-password";
         public string Cpf { get; init; } = "52998224725";
     }
 }

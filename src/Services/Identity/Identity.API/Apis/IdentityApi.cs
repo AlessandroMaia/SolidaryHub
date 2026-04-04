@@ -85,15 +85,20 @@ public static class IdentityApi
     }
 
     private static async Task<IResult> ChangePasswordAsync(
-        [FromBody] ChangePasswordCommand command,
+        [FromBody] ChangePasswordRequestViewModel request,
         IMediator mediator,
         IIdentityService identityService,
         CancellationToken ct)
     {
         var userIdString = identityService.GetUserIdentity();
 
-        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out _))
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
             return Results.Unauthorized();
+
+        var command = new ChangePasswordCommand(
+            userId,
+            request.CurrentPassword,
+            request.NewPassword);
 
         await mediator.Send(command, ct);
 

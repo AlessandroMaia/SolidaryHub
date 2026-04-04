@@ -6,7 +6,7 @@ public static class ForwardedHeadersConfiguration
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var trustAllProxies = configuration.GetValue("ForwardedHeaders:TrustAllProxies", true);
+        var trustAllProxies = configuration.GetValue("ForwardedHeaders:TrustAllProxies", false);
 
         services.Configure<ForwardedHeadersOptions>(options =>
         {
