@@ -29,7 +29,6 @@ global using EventBus.Abstractions;
 global using EventBus.Extensions;
 
 global using FluentValidation;
-global using Scalar.AspNetCore;
 global using System.Reflection;
 
 global using ServiceDefaults.Authentication;

@@ -1,7 +1,9 @@
-﻿namespace Identity.API.Extensions;
+namespace Identity.API.Extensions;
 
 public static class OpenApiExtensions
 {
+    private const string OpenApiRoutePath = "/openapi/v1.json";
+
     public static IServiceCollection AddOpenApiDocumentation(this IServiceCollection services)
     {
         services.AddOpenApi(options =>
@@ -16,7 +18,7 @@ public static class OpenApiExtensions
                     Contact = new()
                     {
                         Name = "SHTeam",
-                        Email = "alessandro@solidaryhub.org.com"
+                        Email = "alessandro@solidarityhub.org.com"
                     }
                 };
 
@@ -35,22 +37,15 @@ public static class OpenApiExtensions
         {
             app.MapOpenApi();
 
-            app.MapScalarApiReference(options =>
-            {
-                options
-                    .WithTitle("Identity API")
-                    .WithTheme(ScalarTheme.Solarized)
-                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-            });
-
             var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation("Documentação disponível em: https://localhost:{Port}/scalar/v1",
-                        app.Configuration["ASPNETCORE_HTTPS_PORT"] ?? "5001");
+                logger.LogInformation(
+                    "Documentação disponível em: http://localhost:{Port}{OpenApiPath}",
+                    app.Configuration["ASPNETCORE_HTTP_PORTS"] ?? "5001",
+                    OpenApiRoutePath);
             }
-
         }
 
         return app;

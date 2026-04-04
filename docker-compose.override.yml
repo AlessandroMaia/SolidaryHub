@@ -8,6 +8,24 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  api.gateway:
+    depends_on:
+      identity.api:
+        condition: service_started
+      campaign.api:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Loki: http://loki:3100
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      JwtSettings__Secret: your-super-secret-key-min-32-chars-long-for-development-only
+      JwtSettings__Issuer: SH.IdentityService
+      JwtSettings__Audience: SH.Client
+      JwtSettings__AccessTokenExpirationMinutes: 60
+      JwtSettings__RefreshTokenExpirationDays: 7
+    ports:
+      - "5000:8080"
+
   identity.api:
     environment:
       ASPNETCORE_ENVIRONMENT: Development

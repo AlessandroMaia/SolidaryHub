@@ -5,8 +5,6 @@
   <Folder Name="/platform/data/postgres/">
     <File Path="platform/data/postgres/init-multiple-dbs.sh" />
   </Folder>
-  <Folder Name="/platform/gateway/" />
-  <Folder Name="/platform/gateway/krakend/" />
   <Folder Name="/platform/observability/" />
   <Folder Name="/platform/observability/grafana/" />
   <Folder Name="/platform/observability/grafana/provisioning/" />
@@ -37,6 +35,9 @@
     <Project Path="src/BuildingBlocks/Mediator/Mediator.csproj" />
     <Project Path="src/BuildingBlocks/ServiceDefaults/ServiceDefaults.csproj" />
     <Project Path="src/BuildingBlocks/SharedKernel/SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Gateways/">
+    <Project Path="src/Gateways/ApiGateway/ApiGateway.csproj" Id="e9ed2d2f-0b19-41aa-920e-bcd8917a0f97" />
   </Folder>
   <Folder Name="/src/Services/" />
   <Folder Name="/src/Services/Campaign/">
