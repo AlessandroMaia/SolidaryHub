@@ -9,9 +9,9 @@
     <File Path=".github/scripts/resolve-service-impact.sh" />
   </Folder>
   <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/continuous-delivery.yml" />
+    <File Path=".github/workflows/continuous-deployment.yml" />
     <File Path=".github/workflows/continuous-integration.yml" />
-    <File Path="continuous-delivery.yml" />
-    <File Path="continuous-deployment.yml" />
   </Folder>
   <Folder Name="/platform/" />
   <Folder Name="/platform/data/" />

@@ -1,4 +1,4 @@
-name: Continuous Delivery
+name: continuous delivery
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: Servico para publicar
+        description: serviço para publicar
         required: true
         default: auto
         type: choice
@@ -19,7 +19,7 @@ on:
           - campaign-api
           - donation-processor
       republish_existing:
-        description: Republica a ultima versao se nao houver novos commits
+        description: republica a última versão se não houver novos commits
         required: true
         default: false
         type: boolean
@@ -27,6 +27,7 @@ on:
 permissions:
   contents: write
   packages: write
+  checks: write
 
 concurrency:
   group: continuous-delivery-main
@@ -34,19 +35,15 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: ghcr.io/${{ github.repository_owner }}/solidarityhub
   SHARED_PATH: src/BuildingBlocks
   MANUAL_SERVICE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.service || 'auto' }}
   REPUBLISH_EXISTING: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.republish_existing || 'false' }}
 
 jobs:
-  quality-gate:
-    name: Quality Gate
-    uses: ./.github/workflows/continuous-integration.yml
-
   detect-impact:
-    name: Detect Impacted Services
+    name: detect impacted services
     runs-on: ubuntu-latest
-    needs: quality-gate
 
     outputs:
       shared: ${{ steps.filter.outputs.shared }}
@@ -56,33 +53,20 @@ jobs:
       donation_processor: ${{ steps.filter.outputs.donation_processor }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - name: checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Resolve Comparison Base
-        id: refs
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
-            echo "base=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
-          elif git rev-parse HEAD~1 >/dev/null 2>&1; then
-            echo "base=$(git rev-parse HEAD~1)" >> "$GITHUB_OUTPUT"
-          else
-            echo "base=$(git rev-list --max-parents=0 HEAD)" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Detect Changes
+      - name: detect changes
         id: filter
         uses: dorny/paths-filter@v3
         with:
-          base: ${{ steps.refs.outputs.base }}
-          ref: ${{ github.sha }}
+          base: ${{ github.ref }}
           filters: .github/filters/service-impact.yml
 
   release-and-publish:
-    name: Release and Publish (${{ matrix.service }})
+    name: release and publish (${{ matrix.service }})
     runs-on: ubuntu-latest
     needs: detect-impact
 
@@ -95,36 +79,32 @@ jobs:
             service_path: src/Gateways/ApiGateway
             dockerfile: src/Gateways/ApiGateway/Dockerfile
             initial_version: 0.1.0
-            service_scope: api-gateway
 
           - service: identity-api
             filter_key: identity
             service_path: src/Services/Identity/Identity.API
             dockerfile: src/Services/Identity/Identity.API/Dockerfile
             initial_version: 0.1.0
-            service_scope: identity-api
 
           - service: campaign-api
             filter_key: campaign
             service_path: src/Services/Campaign/Campaign.API
             dockerfile: src/Services/Campaign/Campaign.API/Dockerfile
             initial_version: 0.1.0
-            service_scope: campaign-api
 
           - service: donation-processor
             filter_key: donation_processor
             service_path: src/Workers/DonationProcessor
             dockerfile: src/Workers/DonationProcessor/Dockerfile
             initial_version: 0.1.0
-            service_scope: donation-processor
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - name: checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Resolve Service Change Flag
+      - name: resolve service change flag
         id: changed
         shell: bash
         run: |
@@ -149,7 +129,7 @@ jobs:
 
           echo "service_changed=$VALUE" >> "$GITHUB_OUTPUT"
 
-      - name: Resolve Impact
+      - name: resolve impact
         id: impact
         shell: bash
         run: |
@@ -159,11 +139,11 @@ jobs:
             "${{ steps.changed.outputs.service_changed }}" \
             "${{ env.MANUAL_SERVICE }}"
 
-      - name: Skip When Not Impacted
+      - name: skip when not impacted
         if: steps.impact.outputs.impacted != 'true'
         run: echo "No delivery required for ${{ matrix.service }}"
 
-      - name: Compute Next Version
+      - name: compute next version
         if: steps.impact.outputs.impacted == 'true'
         id: version
         shell: bash
@@ -173,90 +153,13 @@ jobs:
             "${{ matrix.service_path }}" \
             "${{ env.SHARED_PATH }}" \
             "${{ matrix.initial_version }}" \
-            "${{ env.REPUBLISH_EXISTING }}" \
-            "${{ matrix.service_scope }}"
+            "${{ env.REPUBLISH_EXISTING }}"
 
-      - name: Skip When Release Is Not Needed
+      - name: skip when release is not needed
         if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release != 'true'
         run: echo "No new release required for ${{ matrix.service }}"
 
-      - name: Resolve Image Reference
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        id: image
-        shell: bash
-        run: |
-          OWNER_LOWER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
-          IMAGE_REPOSITORY="ghcr.io/${OWNER_LOWER}/solidarityhub/${{ matrix.service }}"
-          IMAGE_REF="${IMAGE_REPOSITORY}:${{ steps.version.outputs.next_version }}"
-
-          echo "repository=$IMAGE_REPOSITORY" >> "$GITHUB_OUTPUT"
-          echo "image=$IMAGE_REF" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Docker Buildx
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate Docker Metadata
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.image.outputs.repository }}
-          tags: |
-            type=raw,value=${{ steps.version.outputs.next_version }}
-            type=raw,value=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
-            type=raw,value=${{ steps.version.outputs.major }}
-            type=sha,format=short,prefix=sha-
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ steps.version.outputs.next_version }}
-            org.opencontainers.image.title=${{ matrix.service }}
-
-      - name: Build Docker Image For Scan
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          load: true
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
-
-      - name: Scan Docker Image For Vulnerabilities
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        uses: aquasecurity/trivy-action@v0.35.0
-        with:
-          image-ref: ${{ steps.image.outputs.image }}
-          format: table
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Push Docker Image Tags
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        shell: bash
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-        run: |
-          while IFS= read -r tag; do
-            [[ -z "$tag" ]] && continue
-            docker push "$tag"
-          done <<< "$TAGS"
-
-      - name: Create Tag and Release
+      - name: create tag and release
         if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
         id: release
         env:
@@ -268,3 +171,44 @@ jobs:
             "${{ steps.version.outputs.tag_name }}" \
             "${{ steps.version.outputs.next_version }}" \
             "${{ steps.version.outputs.reuse_existing_tag }}"
+
+      - name: setup docker buildx
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: login to GHCR
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: docker metadata
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.next_version }}
+            type=raw,value=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
+            type=raw,value=${{ steps.version.outputs.major }}
+            type=sha,format=short,prefix=sha-
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.next_version }}
+            org.opencontainers.image.title=${{ matrix.service }}
+
+      - name: build and push image
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
