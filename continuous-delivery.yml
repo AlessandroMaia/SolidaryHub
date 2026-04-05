@@ -1,0 +1,213 @@
+name: continuous delivery
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      service:
+        description: serviço para publicar
+        required: true
+        default: auto
+        type: choice
+        options:
+          - auto
+          - all
+          - api-gateway
+          - identity-api
+          - campaign-api
+          - donation-processor
+      republish_existing:
+        description: republica a última versão se não houver novos commits
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: continuous-delivery-main
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: ghcr.io/${{ github.repository_owner }}/solidarityhub
+  SHARED_PATH: src/BuildingBlocks
+  MANUAL_SERVICE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.service || 'auto' }}
+  REPUBLISH_EXISTING: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.republish_existing || 'false' }}
+
+jobs:
+  detect-impact:
+    name: detect impacted services
+    runs-on: ubuntu-latest
+
+    outputs:
+      shared: ${{ steps.filter.outputs.shared }}
+      api_gateway: ${{ steps.filter.outputs.api_gateway }}
+      identity: ${{ steps.filter.outputs.identity }}
+      campaign: ${{ steps.filter.outputs.campaign }}
+      donation_processor: ${{ steps.filter.outputs.donation_processor }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          base: ${{ github.ref }}
+          filters: .github/filters/service-impact.yml
+
+  release-and-publish:
+    name: release and publish (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: detect-impact
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api-gateway
+            filter_key: api_gateway
+            service_path: src/Gateways/ApiGateway
+            dockerfile: src/Gateways/ApiGateway/Dockerfile
+            initial_version: 0.1.0
+
+          - service: identity-api
+            filter_key: identity
+            service_path: src/Services/Identity/Identity.API
+            dockerfile: src/Services/Identity/Identity.API/Dockerfile
+            initial_version: 0.1.0
+
+          - service: campaign-api
+            filter_key: campaign
+            service_path: src/Services/Campaign/Campaign.API
+            dockerfile: src/Services/Campaign/Campaign.API/Dockerfile
+            initial_version: 0.1.0
+
+          - service: donation-processor
+            filter_key: donation_processor
+            service_path: src/Workers/DonationProcessor
+            dockerfile: src/Workers/DonationProcessor/Dockerfile
+            initial_version: 0.1.0
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: resolve service change flag
+        id: changed
+        shell: bash
+        run: |
+          case "${{ matrix.filter_key }}" in
+            api_gateway)
+              VALUE="${{ needs.detect-impact.outputs.api_gateway }}"
+              ;;
+            identity)
+              VALUE="${{ needs.detect-impact.outputs.identity }}"
+              ;;
+            campaign)
+              VALUE="${{ needs.detect-impact.outputs.campaign }}"
+              ;;
+            donation_processor)
+              VALUE="${{ needs.detect-impact.outputs.donation_processor }}"
+              ;;
+            *)
+              echo "Unsupported filter key"
+              exit 1
+              ;;
+          esac
+
+          echo "service_changed=$VALUE" >> "$GITHUB_OUTPUT"
+
+      - name: resolve impact
+        id: impact
+        shell: bash
+        run: |
+          bash .github/scripts/resolve-service-impact.sh \
+            "${{ matrix.service }}" \
+            "${{ needs.detect-impact.outputs.shared }}" \
+            "${{ steps.changed.outputs.service_changed }}" \
+            "${{ env.MANUAL_SERVICE }}"
+
+      - name: skip when not impacted
+        if: steps.impact.outputs.impacted != 'true'
+        run: echo "No delivery required for ${{ matrix.service }}"
+
+      - name: compute next version
+        if: steps.impact.outputs.impacted == 'true'
+        id: version
+        shell: bash
+        run: |
+          bash .github/scripts/compute-next-version.sh \
+            "${{ matrix.service }}" \
+            "${{ matrix.service_path }}" \
+            "${{ env.SHARED_PATH }}" \
+            "${{ matrix.initial_version }}" \
+            "${{ env.REPUBLISH_EXISTING }}"
+
+      - name: skip when release is not needed
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release != 'true'
+        run: echo "No new release required for ${{ matrix.service }}"
+
+      - name: create tag and release
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          bash .github/scripts/create-service-release.sh \
+            "${{ matrix.service }}" \
+            "${{ steps.version.outputs.tag_name }}" \
+            "${{ steps.version.outputs.next_version }}" \
+            "${{ steps.version.outputs.reuse_existing_tag }}"
+
+      - name: setup docker buildx
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: login to GHCR
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: docker metadata
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.next_version }}
+            type=raw,value=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
+            type=raw,value=${{ steps.version.outputs.major }}
+            type=sha,format=short,prefix=sha-
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.next_version }}
+            org.opencontainers.image.title=${{ matrix.service }}
+
+      - name: build and push image
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}

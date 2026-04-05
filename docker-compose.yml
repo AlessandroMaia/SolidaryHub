@@ -128,7 +128,7 @@ services:
       - sh-network
 
   api.gateway:
-    image: ${DOCKER_REGISTRY:-sh}/api.gateway:${TAG:-latest}
+    image: ${DOCKER_REGISTRY:-sh}/api-gateway:${TAG:-local}
     build:
       context: .
       dockerfile: src/Gateways/ApiGateway/Dockerfile
@@ -161,7 +161,7 @@ services:
       - sh-network
 
   identity.api:
-    image: ${DOCKER_REGISTRY:-sh}/identity.api:${TAG:-latest}
+    image: ${DOCKER_REGISTRY:-sh}/identity-api:${TAG:-local}
     build:
       context: .
       dockerfile: src/Services/Identity/Identity.API/Dockerfile
@@ -192,7 +192,7 @@ services:
       - sh-network
 
   campaign.api:
-    image: ${DOCKER_REGISTRY:-sh}/campaign.api:${TAG:-latest}
+    image: ${DOCKER_REGISTRY:-sh}/campaign-api:${TAG:-local}
     build:
       context: .
       dockerfile: src/Services/Campaign/Campaign.API/Dockerfile
@@ -220,7 +220,7 @@ services:
       - sh-network
 
   donation.processor:
-    image: ${DOCKER_REGISTRY:-sh}/donation.processor:${TAG:-latest}
+    image: ${DOCKER_REGISTRY:-sh}/donation-processor:${TAG:-local}
     build:
       context: .
       dockerfile: src/Workers/DonationProcessor/Dockerfile

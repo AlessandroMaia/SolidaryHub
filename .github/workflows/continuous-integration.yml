@@ -1,0 +1,59 @@
+name: continuous integration
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - '.gitignore'
+      - 'docker-compose*.yml'
+  workflow_call:
+  
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: cache nuget packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: restore dependencies
+        run: dotnet restore SolidarityHub.slnx
+
+      - name: build
+        run: dotnet build SolidarityHub.slnx --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: test
+        run: dotnet test SolidarityHub.slnx --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal --logger "trx;LogFileName=results.trx"
+
+      - name: publish test results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: unit tests
+          path: '**/results.trx'
+          reporter: dotnet-trx

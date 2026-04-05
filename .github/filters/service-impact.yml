@@ -1,0 +1,14 @@
+shared:
+  - 'src/BuildingBlocks/**'
+
+api_gateway:
+  - 'src/Gateways/ApiGateway/**'
+
+identity:
+  - 'src/Services/Identity/**'
+
+campaign:
+  - 'src/Services/Campaign/**'
+
+donation_processor:
+  - 'src/Workers/DonationProcessor/**'

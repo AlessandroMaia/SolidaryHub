@@ -1,0 +1,208 @@
+name: continuous deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: ambiente de destino
+        required: true
+        default: staging
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+      service:
+        description: servico para deploy
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - api-gateway
+          - identity-api
+          - campaign-api
+          - donation-processor
+
+      version:
+        description: "tag exata da imagem para deploy (ex.: 1.2.3 ou sha-abc1234)"
+        required: true
+        type: string
+
+      target_platform:
+        description: alvo final do deploy
+        required: true
+        default: generic-k8s
+        type: choice
+        options:
+          - generic-k8s
+          - aks
+          - other
+
+      namespace:
+        description: namespace de destino
+        required: true
+        default: solidarityhub
+        type: string
+
+      dry_run:
+        description: executa apenas validacao e preview, sem aplicar
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
+concurrency:
+  group: continuous-deployment-${{ inputs.environment }}-${{ inputs.service }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: prepare deployment matrix
+    runs-on: ubuntu-latest
+
+    outputs:
+      services: ${{ steps.matrix.outputs.services }}
+
+    steps:
+      - name: build service matrix
+        id: matrix
+        shell: bash
+        run: |
+          case "${{ inputs.service }}" in
+            all)
+              echo 'services={"include":[
+                {"service":"api-gateway","deployment_name":"api-gateway"},
+                {"service":"identity-api","deployment_name":"identity-api"},
+                {"service":"campaign-api","deployment_name":"campaign-api"},
+                {"service":"donation-processor","deployment_name":"donation-processor"}
+              ]}' >> "$GITHUB_OUTPUT"
+              ;;
+            api-gateway)
+              echo 'services={"include":[{"service":"api-gateway","deployment_name":"api-gateway"}]}' >> "$GITHUB_OUTPUT"
+              ;;
+            identity-api)
+              echo 'services={"include":[{"service":"identity-api","deployment_name":"identity-api"}]}' >> "$GITHUB_OUTPUT"
+              ;;
+            campaign-api)
+              echo 'services={"include":[{"service":"campaign-api","deployment_name":"campaign-api"}]}' >> "$GITHUB_OUTPUT"
+              ;;
+            donation-processor)
+              echo 'services={"include":[{"service":"donation-processor","deployment_name":"donation-processor"}]}' >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported service: ${{ inputs.service }}"
+              exit 1
+              ;;
+          esac
+
+  deploy:
+    name: deploy (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: prepare
+    environment:
+      name: ${{ inputs.environment }}
+
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.services) }}
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+
+      - name: resolve image reference
+        id: image
+        shell: bash
+        run: |
+          OWNER_LOWER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          IMAGE_REPOSITORY="ghcr.io/${OWNER_LOWER}/solidarityhub/${{ matrix.service }}"
+          IMAGE_REF="${IMAGE_REPOSITORY}:${{ inputs.version }}"
+
+          echo "repository=$IMAGE_REPOSITORY" >> "$GITHUB_OUTPUT"
+          echo "image=$IMAGE_REF" >> "$GITHUB_OUTPUT"
+
+      - name: login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: verify image exists
+        shell: bash
+        run: |
+          docker buildx imagetools inspect "${{ steps.image.outputs.image }}" >/dev/null
+
+      - name: generate deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## Deployment Plan"
+            echo ""
+            echo "- Environment: \`${{ inputs.environment }}\`"
+            echo "- Service: \`${{ matrix.service }}\`"
+            echo "- Version: \`${{ inputs.version }}\`"
+            echo "- Image: \`${{ steps.image.outputs.image }}\`"
+            echo "- Namespace: \`${{ inputs.namespace }}\`"
+            echo "- Target platform: \`${{ inputs.target_platform }}\`"
+            echo "- Dry run: \`${{ inputs.dry_run }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: render deployment variables
+        shell: bash
+        run: |
+          mkdir -p .deployment-out
+          cat > ".deployment-out/${{ matrix.service }}.env" <<EOF
+          SERVICE_NAME=${{ matrix.service }}
+          DEPLOYMENT_NAME=${{ matrix.deployment_name }}
+          IMAGE_REF=${{ steps.image.outputs.image }}
+          NAMESPACE=${{ inputs.namespace }}
+          ENVIRONMENT=${{ inputs.environment }}
+          TARGET_PLATFORM=${{ inputs.target_platform }}
+          DRY_RUN=${{ inputs.dry_run }}
+          EOF
+
+      - name: upload deployment plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-plan-${{ matrix.service }}
+          path: .deployment-out/${{ matrix.service }}.env
+
+      - name: preview deployment integration point
+        if: inputs.dry_run == true
+        shell: bash
+        run: |
+          echo "Dry run enabled."
+          echo "Aqui entrara a integracao final para ${{ inputs.target_platform }}."
+          echo "Servico: ${{ matrix.service }}"
+          echo "Imagem:  ${{ steps.image.outputs.image }}"
+          echo "Namespace: ${{ inputs.namespace }}"
+
+      - name: execute deployment integration point
+        if: inputs.dry_run == false
+        shell: bash
+        run: |
+          case "${{ inputs.target_platform }}" in
+            aks)
+              echo "TODO: integrar Azure login + aks-set-context + kubectl/helm para AKS"
+              exit 1
+              ;;
+            generic-k8s)
+              echo "TODO: integrar kubectl apply/helm upgrade para cluster Kubernetes generico"
+              exit 1
+              ;;
+            other)
+              echo "TODO: integrar outro alvo de deploy"
+              exit 1
+              ;;
+            *)
+              echo "Unsupported target platform: ${{ inputs.target_platform }}"
+              exit 1
+              ;;
+          esac

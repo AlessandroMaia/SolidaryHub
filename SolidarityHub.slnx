@@ -1,5 +1,18 @@
 <Solution>
-  <Folder Name="/docs/" />
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/filters/">
+    <File Path=".github/filters/service-impact.yml" />
+  </Folder>
+  <Folder Name="/.github/scripts/">
+    <File Path=".github/scripts/compute-next-version.sh" />
+    <File Path=".github/scripts/create-service-release.sh" />
+    <File Path=".github/scripts/resolve-service-impact.sh" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/continuous-integration.yml" />
+    <File Path="continuous-delivery.yml" />
+    <File Path="continuous-deployment.yml" />
+  </Folder>
   <Folder Name="/platform/" />
   <Folder Name="/platform/data/" />
   <Folder Name="/platform/data/postgres/">
