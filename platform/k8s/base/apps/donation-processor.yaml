@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: donation-processor
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: donation-processor
+  template:
+    metadata:
+      labels:
+        app: donation-processor
+    spec:
+      containers:
+        - name: donation-processor
+          image: donation-processor
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9464
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: ConnectionStrings__RabbitMQ
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ConnectionStrings__RabbitMQ
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: donation-processor-metrics
+
+spec:
+  selector:
+    app: donation-processor
+  ports:
+    - name: metrics
+      port: 9464
+      targetPort: 9464

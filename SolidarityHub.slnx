@@ -14,6 +14,50 @@
   <Folder Name="/platform/data/postgres/">
     <File Path="platform/data/postgres/init-multiple-dbs.sh" />
   </Folder>
+  <Folder Name="/platform/k8s/" />
+  <Folder Name="/platform/k8s/base/">
+    <File Path="platform/k8s/base/kustomization.yaml" />
+    <File Path="platform/k8s/base/namespace.yaml" />
+  </Folder>
+  <Folder Name="/platform/k8s/base/apps/">
+    <File Path="platform/k8s/base/apps/api-gateway.yaml" />
+    <File Path="platform/k8s/base/apps/campaign-api.yaml" />
+    <File Path="platform/k8s/base/apps/donation-processor.yaml" />
+    <File Path="platform/k8s/base/apps/identity-api.yaml" />
+  </Folder>
+  <Folder Name="/platform/k8s/base/config/">
+    <File Path="platform/k8s/base/config/app-configmap.yaml" />
+  </Folder>
+  <Folder Name="/platform/k8s/base/infra/">
+    <File Path="platform/k8s/base/infra/postgres-init-configmap.yaml" />
+    <File Path="platform/k8s/base/infra/postgres.yaml" />
+    <File Path="platform/k8s/base/infra/rabbitmq.yaml" />
+  </Folder>
+  <Folder Name="/platform/k8s/base/observability/">
+    <File Path="platform/k8s/base/observability/grafana.yaml" />
+    <File Path="platform/k8s/base/observability/jaeger.yaml" />
+    <File Path="platform/k8s/base/observability/loki.yaml" />
+    <File Path="platform/k8s/base/observability/prometheus.yaml" />
+  </Folder>
+  <Folder Name="/platform/k8s/base/observability/files/">
+    <File Path="platform/k8s/base/observability/files/dashboard.yml" />
+    <File Path="platform/k8s/base/observability/files/datasources.yml" />
+    <File Path="platform/k8s/base/observability/files/prometheus.yml" />
+    <File Path="platform/k8s/base/observability/files/solidarityhub-overview.json" />
+  </Folder>
+  <Folder Name="/platform/k8s/base/secrets/">
+    <File Path="platform/k8s/base/secrets/app-secrets.yaml" />
+  </Folder>
+  <Folder Name="/platform/k8s/overlays/" />
+  <Folder Name="/platform/k8s/overlays/dev/">
+    <File Path="platform/k8s/overlays/dev/kustomization.yaml" />
+  </Folder>
+  <Folder Name="/platform/k8s/overlays/staging/">
+    <File Path="platform/k8s/overlays/staging/app-config-patch.yaml" />
+    <File Path="platform/k8s/overlays/staging/ghcr-secret.yaml" />
+    <File Path="platform/k8s/overlays/staging/image-pull-secret-patch.yaml" />
+    <File Path="platform/k8s/overlays/staging/kustomization.yaml" />
+  </Folder>
   <Folder Name="/platform/observability/" />
   <Folder Name="/platform/observability/grafana/" />
   <Folder Name="/platform/observability/grafana/provisioning/" />
