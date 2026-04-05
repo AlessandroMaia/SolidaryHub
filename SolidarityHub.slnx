@@ -1,12 +1,8 @@
 <Solution>
   <Folder Name="/.github/" />
-  <Folder Name="/.github/filters/">
-    <File Path=".github/filters/service-impact.yml" />
-  </Folder>
   <Folder Name="/.github/scripts/">
     <File Path=".github/scripts/compute-next-version.sh" />
     <File Path=".github/scripts/create-service-release.sh" />
-    <File Path=".github/scripts/resolve-service-impact.sh" />
   </Folder>
   <Folder Name="/.github/workflows/">
     <File Path=".github/workflows/continuous-delivery.yml" />

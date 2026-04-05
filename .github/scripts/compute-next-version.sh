@@ -46,6 +46,12 @@ increment_semver() {
 detect_bump() {
   local commits="$1"
   local scoped_pattern="(${SERVICE_SCOPE}|shared|buildingblocks)"
+  local scoped_scope_regex="^${scoped_pattern}$"
+  local breaking_scoped_regex='^[a-z]+\(([^()]*)\)!:'
+  local scoped_regex='^[a-z]+\(([^()]*)\):'
+  local unscoped_breaking_regex='^[a-z]+!:'
+  local unscoped_regex='^[a-z]+:'
+  local feat_regex='^feat(\(|:)'
   local major_found=false
   local minor_found=false
   local block subject scope body applies
@@ -62,13 +68,13 @@ detect_bump() {
       continue
     fi
 
-    if [[ "$subject" =~ ^[a-z]+\(([^)]+)\)!: ]]; then
+    if [[ "$subject" =~ $breaking_scoped_regex ]]; then
       scope="${BASH_REMATCH[1]}"
-      [[ "$scope" =~ ^${scoped_pattern}$ ]] && applies=true
-    elif [[ "$subject" =~ ^[a-z]+\(([^)]+)\): ]]; then
+      [[ "$scope" =~ $scoped_scope_regex ]] && applies=true
+    elif [[ "$subject" =~ $scoped_regex ]]; then
       scope="${BASH_REMATCH[1]}"
-      [[ "$scope" =~ ^${scoped_pattern}$ ]] && applies=true
-    elif [[ "$subject" =~ ^[a-z]+!: ]] || [[ "$subject" =~ ^[a-z]+: ]]; then
+      [[ "$scope" =~ $scoped_scope_regex ]] && applies=true
+    elif [[ "$subject" =~ $unscoped_breaking_regex ]] || [[ "$subject" =~ $unscoped_regex ]]; then
       applies=true
     fi
 
@@ -79,7 +85,7 @@ detect_bump() {
       break
     fi
 
-    if [[ "$subject" =~ ^feat(\(|:) ]]; then
+    if [[ "$subject" =~ $feat_regex ]]; then
       minor_found=true
     fi
   done < <(printf '%s' "$commits" | awk -v RS='----DELIMITER----\n' 'NF')
