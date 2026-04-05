@@ -41,7 +41,6 @@ jobs:
   release-and-publish:
     name: release and publish (${{ matrix.service }})
     runs-on: ubuntu-latest
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.service == 'auto' || github.event.inputs.service == 'all' || github.event.inputs.service == matrix.service
 
     strategy:
       fail-fast: false
@@ -73,7 +72,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: skip when service is not selected
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.service != 'auto' && github.event.inputs.service != 'all' && github.event.inputs.service != matrix.service
+        run: echo "Service ${{ matrix.service }} was not selected for this manual execution"
+
       - name: compute next version
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.service == 'auto' || github.event.inputs.service == 'all' || github.event.inputs.service == matrix.service
         id: version
         shell: bash
         run: |
