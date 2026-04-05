@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: serviço para publicar
+        description: servico para publicar
         required: true
         default: auto
         type: choice
@@ -19,7 +19,7 @@ on:
           - campaign-api
           - donation-processor
       republish_existing:
-        description: republica a última versão se não houver novos commits
+        description: republica a ultima versao se nao houver novos commits
         required: true
         default: false
         type: boolean
@@ -35,7 +35,6 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAMESPACE: ghcr.io/${{ github.repository_owner }}/solidarityhub
   SHARED_PATH: src/BuildingBlocks
   MANUAL_SERVICE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.service || 'auto' }}
   REPUBLISH_EXISTING: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.republish_existing || 'false' }}
@@ -58,11 +57,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: resolve comparison base
+        id: base
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
+            echo "base=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          else
+            ROOT_COMMIT="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
+            echo "base=$ROOT_COMMIT" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: detect changes
         id: filter
         uses: dorny/paths-filter@v3
         with:
-          base: ${{ github.ref }}
+          base: ${{ steps.base.outputs.base }}
+          ref: ${{ github.sha }}
           filters: .github/filters/service-impact.yml
 
   release-and-publish:
@@ -78,25 +89,25 @@ jobs:
             filter_key: api_gateway
             service_path: src/Gateways/ApiGateway
             dockerfile: src/Gateways/ApiGateway/Dockerfile
-            initial_version: 0.1.0
+            initial_version: 1.0.0
 
           - service: identity-api
             filter_key: identity
             service_path: src/Services/Identity/Identity.API
             dockerfile: src/Services/Identity/Identity.API/Dockerfile
-            initial_version: 0.1.0
+            initial_version: 1.0.0
 
           - service: campaign-api
             filter_key: campaign
             service_path: src/Services/Campaign/Campaign.API
             dockerfile: src/Services/Campaign/Campaign.API/Dockerfile
-            initial_version: 0.1.0
+            initial_version: 1.0.0
 
           - service: donation-processor
             filter_key: donation_processor
             service_path: src/Workers/DonationProcessor
             dockerfile: src/Workers/DonationProcessor/Dockerfile
-            initial_version: 0.1.0
+            initial_version: 1.0.0
 
     steps:
       - name: checkout
@@ -129,6 +140,22 @@ jobs:
 
           echo "service_changed=$VALUE" >> "$GITHUB_OUTPUT"
 
+      - name: detect existing release tag
+        id: tag
+        shell: bash
+        run: |
+          git fetch --tags --force >/dev/null 2>&1 || true
+
+          TAG="$(git tag -l "${{ matrix.service }}-v*" --sort=-version:refname | head -n 1)"
+
+          if [[ -n "$TAG" ]]; then
+            echo "has_release_tag=true" >> "$GITHUB_OUTPUT"
+            echo "last_tag=$TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_release_tag=false" >> "$GITHUB_OUTPUT"
+            echo "last_tag=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: resolve impact
         id: impact
         shell: bash
@@ -137,7 +164,8 @@ jobs:
             "${{ matrix.service }}" \
             "${{ needs.detect-impact.outputs.shared }}" \
             "${{ steps.changed.outputs.service_changed }}" \
-            "${{ env.MANUAL_SERVICE }}"
+            "${{ env.MANUAL_SERVICE }}" \
+            "${{ steps.tag.outputs.has_release_tag }}"
 
       - name: skip when not impacted
         if: steps.impact.outputs.impacted != 'true'
@@ -153,24 +181,12 @@ jobs:
             "${{ matrix.service_path }}" \
             "${{ env.SHARED_PATH }}" \
             "${{ matrix.initial_version }}" \
-            "${{ env.REPUBLISH_EXISTING }}"
+            "${{ env.REPUBLISH_EXISTING }}" \
+            "${{ matrix.service }}"
 
       - name: skip when release is not needed
         if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release != 'true'
         run: echo "No new release required for ${{ matrix.service }}"
-
-      - name: create tag and release
-        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
-        id: release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          bash .github/scripts/create-service-release.sh \
-            "${{ matrix.service }}" \
-            "${{ steps.version.outputs.tag_name }}" \
-            "${{ steps.version.outputs.next_version }}" \
-            "${{ steps.version.outputs.reuse_existing_tag }}"
 
       - name: setup docker buildx
         if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
@@ -184,12 +200,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: resolve image namespace
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        id: image
+        shell: bash
+        run: |
+          OWNER_LOWER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "namespace=ghcr.io/${OWNER_LOWER}/solidarityhub" >> "$GITHUB_OUTPUT"
+
       - name: docker metadata
         if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}
+          images: ${{ steps.image.outputs.namespace }}/${{ matrix.service }}
           tags: |
             type=raw,value=${{ steps.version.outputs.next_version }}
             type=raw,value=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
@@ -212,3 +236,16 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+      - name: create tag and release
+        if: steps.impact.outputs.impacted == 'true' && steps.version.outputs.should_release == 'true'
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          bash .github/scripts/create-service-release.sh \
+            "${{ matrix.service }}" \
+            "${{ steps.version.outputs.tag_name }}" \
+            "${{ steps.version.outputs.next_version }}" \
+            "${{ steps.version.outputs.reuse_existing_tag }}"

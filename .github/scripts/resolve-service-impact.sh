@@ -5,13 +5,17 @@ SERVICE="${1:?service is required}"
 SHARED_CHANGED="${2:-false}"
 SERVICE_CHANGED="${3:-false}"
 MANUAL_TARGET="${4:-auto}"
+HAS_RELEASE_TAG="${5:-true}"
 
 IMPACTED=false
 REASON=none
 
 case "$MANUAL_TARGET" in
   auto)
-    if [[ "$SHARED_CHANGED" == "true" || "$SERVICE_CHANGED" == "true" ]]; then
+    if [[ "$HAS_RELEASE_TAG" != "true" ]]; then
+      IMPACTED=true
+      REASON="bootstrap"
+    elif [[ "$SHARED_CHANGED" == "true" || "$SERVICE_CHANGED" == "true" ]]; then
       IMPACTED=true
 
       if [[ "$SHARED_CHANGED" == "true" && "$SERVICE_CHANGED" == "true" ]]; then
