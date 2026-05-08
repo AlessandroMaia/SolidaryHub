@@ -39,6 +39,8 @@ spec:
                   key: GRAFANA_ADMIN_PASSWORD
             - name: GF_USERS_ALLOW_SIGN_UP
               value: "false"
+            - name: GF_INSTALL_PLUGINS
+              value: alexanderzobnin-zabbix-app
           ports:
             - containerPort: 3000
           volumeMounts:
@@ -53,6 +55,9 @@ spec:
             - name: grafana-dashboards
               mountPath: /etc/grafana/provisioning/dashboards/json/solidarityhub-overview.json
               subPath: solidarityhub-overview.json
+            - name: grafana-dashboards-zabbix
+              mountPath: /etc/grafana/provisioning/dashboards/json/solidarityhub-infra-zabbix.json
+              subPath: solidarityhub-infra-zabbix.json
       volumes:
         - name: grafana-data
           persistentVolumeClaim:
@@ -66,6 +71,9 @@ spec:
         - name: grafana-dashboards
           configMap:
             name: grafana-dashboards
+        - name: grafana-dashboards-zabbix
+          configMap:
+            name: grafana-dashboards-zabbix
 
 ---
 apiVersion: v1

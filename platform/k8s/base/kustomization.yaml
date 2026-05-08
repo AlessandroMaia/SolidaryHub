@@ -21,6 +21,7 @@ resources:
   - observability/jaeger.yaml
   - observability/prometheus.yaml
   - observability/grafana.yaml
+  - observability/zabbix.yaml
 
 configMapGenerator:
   - name: prometheus-config
@@ -38,6 +39,10 @@ configMapGenerator:
   - name: grafana-dashboards
     files:
       - observability/files/solidarityhub-overview.json
+
+  - name: grafana-dashboards-zabbix
+    files:
+      - observability/files/solidarityhub-infra-zabbix.json
 
 generatorOptions:
   disableNameSuffixHash: true

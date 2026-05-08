@@ -30,3 +30,14 @@ datasources:
         spanEndTimeShift: "1h"
         filterByTraceID: true
         filterBySpanID: false
+
+  - name: Zabbix
+    uid: zabbix
+    type: alexanderzobnin-zabbix-datasource
+    access: proxy
+    url: http://zabbix-web:8080/api_jsonrpc.php
+    editable: true
+    jsonData:
+      username: Admin
+    secureJsonData:
+      password: zabbix
