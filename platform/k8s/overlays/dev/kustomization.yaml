@@ -8,17 +8,17 @@ resources:
 
 images:
   - name: api-gateway
-    newName: solidarityhub/api-gateway
+    newName: sh/api-gateway
     newTag: local
 
   - name: identity-api
-    newName: solidarityhub/identity-api
+    newName: sh/identity-api
     newTag: local
 
   - name: campaign-api
-    newName: solidarityhub/campaign-api
+    newName: sh/campaign-api
     newTag: local
 
   - name: donation-processor
-    newName: solidarityhub/donation-processor
+    newName: sh/donation-processor
     newTag: local

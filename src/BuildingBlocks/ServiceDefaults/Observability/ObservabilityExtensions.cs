@@ -71,7 +71,7 @@ public static class ObservabilityExtensions
     public static WebApplication UsePrometheusMetrics(this WebApplication app)
     {
         var scrapePath = app.Configuration["Prometheus:ScrapeEndpointPath"] ?? "/metrics";
-        app.UseOpenTelemetryPrometheusScrapingEndpoint(context => context.Request.Path == scrapePath);
+        app.MapPrometheusScrapingEndpoint(scrapePath).AllowAnonymous();
 
         return app;
     }

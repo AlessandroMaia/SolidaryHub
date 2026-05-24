@@ -223,8 +223,6 @@ spec:
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           effect: NoSchedule
-      hostNetwork: true
-      hostPID: true
       containers:
         - name: zabbix-agent2
           image: zabbix/zabbix-agent2:alpine-7.0-latest
@@ -237,27 +235,25 @@ spec:
               value: zabbix-server
             - name: ZBX_ACTIVE_ALLOW
               value: "true"
-            - name: ZBX_HOSTNAME_ITEM
-              value: system.hostname
+            - name: ZBX_HOSTNAME
+              value: Zabbix server
+          ports:
+            - containerPort: 10050
+              name: agent
           securityContext:
             privileged: true
-          volumeMounts:
-            - name: rootfs
-              mountPath: /hostfs
-              readOnly: true
-            - name: host-proc
-              mountPath: /hostfs/proc
-              readOnly: true
-            - name: host-run
-              mountPath: /var/run
-              readOnly: false
-      volumes:
-        - name: rootfs
-          hostPath:
-            path: /
-        - name: host-proc
-          hostPath:
-            path: /proc
-        - name: host-run
-          hostPath:
-            path: /var/run
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: zabbix-agent2
+
+spec:
+  selector:
+    app: zabbix-agent2
+  ports:
+    - name: agent
+      port: 10050
+      targetPort: 10050

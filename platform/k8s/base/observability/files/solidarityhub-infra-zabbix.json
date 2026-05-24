@@ -45,7 +45,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up{job=\"api.gateway\"}",
+          "expr": "up{job=\"api-gateway\"}",
           "legendFormat": "Gateway",
           "refId": "A"
         }
@@ -71,7 +71,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up{job=\"identity.api\"}",
+          "expr": "up{job=\"identity-api\"}",
           "legendFormat": "Identity",
           "refId": "A"
         }
@@ -97,7 +97,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up{job=\"campaign.api\"}",
+          "expr": "up{job=\"campaign-api\"}",
           "legendFormat": "Campaign",
           "refId": "A"
         }
@@ -123,7 +123,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up{job=\"donation.processor\"}",
+          "expr": "up{job=\"donation-processor\"}",
           "legendFormat": "Processor",
           "refId": "A"
         }

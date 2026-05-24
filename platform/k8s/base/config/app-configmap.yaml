@@ -13,7 +13,7 @@ data:
   JwtSettings__AccessTokenExpirationMinutes: "60"
   JwtSettings__RefreshTokenExpirationDays: "7"
 
-  AdminSeed__Enabled: "false"
+  AdminSeed__Enabled: "true"
   AdminSeed__FirstName: "Administrador"
   AdminSeed__LastName: "ONG"
   AdminSeed__Email: "admin@conexaosolidaria.local"
