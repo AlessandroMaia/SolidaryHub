@@ -355,17 +355,16 @@ Para ver a cobertura de uma execucao: **Actions** -> execucao do workflow -> aba
 
 ### SonarCloud (opcional)
 
-A pipeline tambem envia cobertura e resultados de teste para o SonarCloud quando o repositorio tem as credenciais configuradas. Sem elas, as etapas do Sonar sao ignoradas e a pipeline segue normalmente.
+A pipeline tambem envia cobertura e resultados de teste para o SonarCloud quando o secret `SONAR_TOKEN` existe no repositorio. Sem ele, as etapas do Sonar sao ignoradas e a pipeline segue normalmente.
 
 Configuracao necessaria:
 
 1. Em [sonarcloud.io](https://sonarcloud.io), entrar com o GitHub, importar a organizacao e o repositorio.
 2. Nas configuracoes do projeto no SonarCloud, **desativar "Automatic Analysis"** (conflita com a analise via CI).
 3. Gerar um token em **My Account -> Security**.
-4. No repositorio do GitHub, em **Settings -> Secrets and variables -> Actions**:
-   - secret `SONAR_TOKEN`: token gerado no passo anterior;
-   - variable `SONAR_ORGANIZATION`: chave da organizacao no SonarCloud;
-   - variable `SONAR_PROJECT_KEY`: chave do projeto no SonarCloud.
+4. No repositorio do GitHub, em **Settings -> Secrets and variables -> Actions**, criar o secret `SONAR_TOKEN` com o token gerado.
+
+A chave do projeto (`AlessandroMaia_SolidaryHub`) e a organizacao (`alessandromaia`) ficam no `env` do workflow, pois nao sao dados sensiveis.
 
 As exclusoes de cobertura enviadas ao Sonar espelham o `coverage.runsettings`, para que os dois relatorios mecam o mesmo escopo.
 

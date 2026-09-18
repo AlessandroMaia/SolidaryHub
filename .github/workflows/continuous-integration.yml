@@ -23,7 +23,8 @@ env:
   COVERAGE_REPORTS: tests/*/TestResults/*/coverage.cobertura.xml
   COVERAGE_REPORT_DIR: coveragereport
   REPORTGENERATOR_VERSION: 5.5.11
-  # espelha o Include/ExcludeByFile de tests/coverage.runsettings para o sonar medir o mesmo escopo
+  SONAR_PROJECT_KEY: AlessandroMaia_SolidaryHub
+  SONAR_ORGANIZATION: alessandromaia
   SONAR_COVERAGE_EXCLUSIONS: >-
     src/Gateways/**,
     src/Workers/**,
@@ -71,23 +72,17 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
-      # ---------------------------------------------------------------
-      # sonarcloud (opcional): so roda quando o token e as variaveis existem.
-      # sem eles a pipeline segue normalmente com o reportgenerator.
-      # ---------------------------------------------------------------
       - name: check sonarcloud configuration
         id: sonar
         shell: bash
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
-          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
         run: |
-          if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_PROJECT_KEY" ] && [ -n "$SONAR_ORGANIZATION" ]; then
+          if [ -n "$SONAR_TOKEN" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::sonarcloud nao configurado (SONAR_TOKEN, SONAR_PROJECT_KEY, SONAR_ORGANIZATION); analise ignorada."
+            echo "::notice::secret SONAR_TOKEN nao configurado; analise do sonarcloud ignorada."
           fi
 
       - name: setup java (sonar scanner)
@@ -108,17 +103,14 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet sonarscanner begin \
-            /k:"${{ vars.SONAR_PROJECT_KEY }}" \
-            /o:"${{ vars.SONAR_ORGANIZATION }}" \
+            /k:"$SONAR_PROJECT_KEY" \
+            /o:"$SONAR_ORGANIZATION" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.cs.opencover.reportsPaths="tests/*/TestResults/*/coverage.opencover.xml" \
             /d:sonar.cs.vstest.reportsPaths="tests/*/TestResults/*.trx" \
             /d:sonar.coverage.exclusions="$(echo "$SONAR_COVERAGE_EXCLUSIONS" | tr -d ' ')"
 
-      # ---------------------------------------------------------------
-      # build e testes com coleta de cobertura (coverlet via runsettings)
-      # ---------------------------------------------------------------
       - name: restore dependencies
         run: dotnet restore SolidarityHub.slnx
 
@@ -141,10 +133,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
-      # ---------------------------------------------------------------
-      # relatorio de cobertura: mescla os projetos de teste, publica o
-      # resumo no job summary e disponibiliza o html para download
-      # ---------------------------------------------------------------
       - name: generate coverage report
         if: ${{ !cancelled() }}
         shell: bash
