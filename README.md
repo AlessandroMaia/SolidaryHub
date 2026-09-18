@@ -272,6 +272,27 @@ Ultima validacao executada nesta revisao:
 - `Campaign.UnitTests`: 72 aprovados
 - `Identity.UnitTests`: 131 aprovados
 
+### Cobertura de codigo
+
+Os testes usam **xUnit** com **coverlet** para coleta de cobertura. O escopo medido (assemblies incluidos e arquivos excluidos, como `Program.cs`, migrations e configuracoes de EF) fica em [`tests/coverage.runsettings`](./tests/coverage.runsettings).
+
+Para gerar a cobertura localmente e consolidar os dois projetos em um unico relatorio HTML:
+
+```bash
+dotnet tool install --global dotnet-reportgenerator-globaltool
+
+dotnet test SolidarityHub.slnx --settings tests/coverage.runsettings
+
+reportgenerator   "-reports:tests/*/TestResults/*/coverage.cobertura.xml"   "-targetdir:coveragereport"   "-reporttypes:Html;MarkdownSummaryGithub"
+```
+
+Abra `coveragereport/index.html` para navegar por assembly, classe e linha.
+
+Cobertura consolidada nesta revisao (7 assemblies):
+
+- linhas: **93,7%** (1586 de 1692)
+- branches: **88,1%** (297 de 337)
+
 ## Kubernetes
 
 Os manifests da solucao estao em:
@@ -315,9 +336,38 @@ Workflows disponiveis em [`.github/workflows`](./.github/workflows):
 
 Resumo:
 
-- **CI**: restore, build e testes
+- **CI**: restore, build, testes unitarios com cobertura e publicacao dos relatorios
 - **Delivery**: versionamento, build e push de imagens
 - **Deployment**: estrutura preparada para evolucao do deploy automatizado
+
+### Pipeline de CI e cobertura
+
+O workflow `continuous-integration.yml` roda em `push` e `pull_request` para `main` (e manualmente via `workflow_dispatch`). Etapas:
+
+1. restore e build da solucao;
+2. `dotnet test` com `tests/coverage.runsettings`, gerando cobertura em Cobertura e OpenCover por projeto de teste;
+3. **ReportGenerator** mescla os relatorios e produz o HTML consolidado;
+4. o resumo de cobertura (linhas e branches por assembly) e escrito no **Job Summary** da execucao;
+5. o relatorio HTML completo fica disponivel para download como artefato `coverage-report`;
+6. os resultados dos testes (`.trx`) sao publicados como check `unit tests`.
+
+Para ver a cobertura de uma execucao: **Actions** -> execucao do workflow -> aba **Summary** (resumo) e secao **Artifacts** (download do `coverage-report`).
+
+### SonarCloud (opcional)
+
+A pipeline tambem envia cobertura e resultados de teste para o SonarCloud quando o repositorio tem as credenciais configuradas. Sem elas, as etapas do Sonar sao ignoradas e a pipeline segue normalmente.
+
+Configuracao necessaria:
+
+1. Em [sonarcloud.io](https://sonarcloud.io), entrar com o GitHub, importar a organizacao e o repositorio.
+2. Nas configuracoes do projeto no SonarCloud, **desativar "Automatic Analysis"** (conflita com a analise via CI).
+3. Gerar um token em **My Account -> Security**.
+4. No repositorio do GitHub, em **Settings -> Secrets and variables -> Actions**:
+   - secret `SONAR_TOKEN`: token gerado no passo anterior;
+   - variable `SONAR_ORGANIZATION`: chave da organizacao no SonarCloud;
+   - variable `SONAR_PROJECT_KEY`: chave do projeto no SonarCloud.
+
+As exclusoes de cobertura enviadas ao Sonar espelham o `coverage.runsettings`, para que os dois relatorios mecam o mesmo escopo.
 
 ## Estrutura do repositorio
 

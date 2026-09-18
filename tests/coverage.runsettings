@@ -4,7 +4,7 @@
     <DataCollectors>
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
-          <Format>cobertura</Format>
+          <Format>cobertura,opencover</Format>
           <Include>[Campaign.*]*,[Identity.*]*,[ServiceDefaults]*,[SharedKernel]*</Include>
           <ExcludeByFile>**/Migrations/*.cs,**/*.Designer.cs,**/obj/**/*.cs,**/Program.cs,**/GlobalUsings.cs,**/EntityConfigurations/*.cs,**/Apis/*.cs,**/Extensions/*.cs,**/Application/ViewModels/*.cs,**/*Command.cs,**/*Query.cs,**/I*.cs,**/Services/Campaign/Campaign.Infrastructure/**/*.cs</ExcludeByFile>
           <SkipAutoProps>true</SkipAutoProps>

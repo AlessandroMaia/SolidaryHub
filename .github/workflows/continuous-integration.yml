@@ -1,6 +1,12 @@
 name: continuous integration
 
 on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - '.gitignore'
+      - 'docker-compose*.yml'
   pull_request:
     branches: [ main ]
     paths-ignore:
@@ -9,10 +15,33 @@ on:
       - 'docker-compose*.yml'
   workflow_dispatch:
   workflow_call:
-  
+
 env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
+  COVERAGE_SETTINGS: tests/coverage.runsettings
+  COVERAGE_REPORTS: tests/*/TestResults/*/coverage.cobertura.xml
+  COVERAGE_REPORT_DIR: coveragereport
+  REPORTGENERATOR_VERSION: 5.5.11
+  # espelha o Include/ExcludeByFile de tests/coverage.runsettings para o sonar medir o mesmo escopo
+  SONAR_COVERAGE_EXCLUSIONS: >-
+    src/Gateways/**,
+    src/Workers/**,
+    src/BuildingBlocks/EventBus/**,
+    src/BuildingBlocks/EventBusRabbitMQ/**,
+    src/BuildingBlocks/Mediator/**,
+    src/Services/Campaign/Campaign.Infrastructure/**,
+    **/Migrations/**,
+    **/*.Designer.cs,
+    **/Program.cs,
+    **/GlobalUsings.cs,
+    **/EntityConfigurations/**,
+    **/Apis/**,
+    **/Extensions/**,
+    **/Application/ViewModels/**,
+    **/*Command.cs,
+    **/*Query.cs,
+    **/I*.cs
 
 permissions:
   contents: read
@@ -20,7 +49,7 @@ permissions:
 
 jobs:
   build-and-test:
-    name: build and test
+    name: build, test and coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -42,18 +71,107 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
+      # ---------------------------------------------------------------
+      # sonarcloud (opcional): so roda quando o token e as variaveis existem.
+      # sem eles a pipeline segue normalmente com o reportgenerator.
+      # ---------------------------------------------------------------
+      - name: check sonarcloud configuration
+        id: sonar
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        run: |
+          if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_PROJECT_KEY" ] && [ -n "$SONAR_ORGANIZATION" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::sonarcloud nao configurado (SONAR_TOKEN, SONAR_PROJECT_KEY, SONAR_ORGANIZATION); analise ignorada."
+          fi
+
+      - name: setup java (sonar scanner)
+        if: steps.sonar.outputs.enabled == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: install sonar scanner
+        if: steps.sonar.outputs.enabled == 'true'
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: sonar begin
+        if: steps.sonar.outputs.enabled == 'true'
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"${{ vars.SONAR_PROJECT_KEY }}" \
+            /o:"${{ vars.SONAR_ORGANIZATION }}" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="tests/*/TestResults/*/coverage.opencover.xml" \
+            /d:sonar.cs.vstest.reportsPaths="tests/*/TestResults/*.trx" \
+            /d:sonar.coverage.exclusions="$(echo "$SONAR_COVERAGE_EXCLUSIONS" | tr -d ' ')"
+
+      # ---------------------------------------------------------------
+      # build e testes com coleta de cobertura (coverlet via runsettings)
+      # ---------------------------------------------------------------
       - name: restore dependencies
         run: dotnet restore SolidarityHub.slnx
 
       - name: build
         run: dotnet build SolidarityHub.slnx --configuration ${{ env.CONFIGURATION }} --no-restore
 
-      - name: test
-        run: dotnet test SolidarityHub.slnx --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal --logger "trx;LogFileName=results.trx"
+      - name: test with coverage
+        run: >-
+          dotnet test SolidarityHub.slnx
+          --configuration ${{ env.CONFIGURATION }}
+          --no-build
+          --verbosity normal
+          --settings ${{ env.COVERAGE_SETTINGS }}
+          --logger "trx;LogFileName=results.trx"
+
+      - name: sonar end
+        if: ${{ !cancelled() && steps.sonar.outputs.enabled == 'true' }}
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+      # ---------------------------------------------------------------
+      # relatorio de cobertura: mescla os projetos de teste, publica o
+      # resumo no job summary e disponibiliza o html para download
+      # ---------------------------------------------------------------
+      - name: generate coverage report
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version ${{ env.REPORTGENERATOR_VERSION }}
+          reportgenerator \
+            "-reports:${{ env.COVERAGE_REPORTS }}" \
+            "-targetdir:${{ env.COVERAGE_REPORT_DIR }}" \
+            "-reporttypes:Html;MarkdownSummaryGithub;Cobertura" \
+            "-title:SolidarityHub"
+
+      - name: publish coverage summary
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: cat "${{ env.COVERAGE_REPORT_DIR }}/SummaryGithub.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ${{ env.COVERAGE_REPORT_DIR }}
+          if-no-files-found: error
 
       - name: publish test results
         uses: dorny/test-reporter@v2
-        if: always()
+        if: ${{ !cancelled() }}
         with:
           name: unit tests
           path: '**/results.trx'
